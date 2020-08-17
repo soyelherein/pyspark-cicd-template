@@ -1,0 +1,743 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Introduction &mdash; pyspark-tdd-template 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="jobs package" href="jobs.html" />
+    <link rel="prev" title="Welcome to pyspark-tdd-template’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> pyspark-tdd-template
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#initial-pyspark-code">Initial Pyspark code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-static-configurations">Handling static configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#handling-spark-environments">Handling spark environments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modularize-the-code">Modularize the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-setup">Testing setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-example-locally">Running the example locally</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deploying-into-production">Deploying into production</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="jobs.html">jobs package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tests.html">tests package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">dependencies package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pyspark-tdd-template</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Introduction</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/intro.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>There are a few good Blog about modularising, packaging and structuring the data pipelines for Spark jobs.
+However, the testing part is often neglected or covered from very top level.
+Data application testing is different and a pipeline change in the logic is always prone to breaking the logic somewhere else.</p>
+<p>This project discusses on a template for data pipeline project using Apache Spark and its Python(<cite>PySpark</cite>) APIs with special focus on data-pipeline testing.
+But, before we deep dive, We need to touch upon how we can structure our code to use of the approach outlined here.
+This project covers the following topics:</p>
+<ul class="simple">
+<li><p>Structuring ETL codes into testable modules.</p></li>
+<li><p>Setting up configurations and test data(Testbed).</p></li>
+<li><p>Boilerplate pytest style testcases for PySpark jobs.</p></li>
+<li><p>Packaging and submitting jobs in the cluster.</p></li>
+</ul>
+<div class="section" id="initial-pyspark-code">
+<h2>Initial Pyspark code<a class="headerlink" href="#initial-pyspark-code" title="Permalink to this headline">¶</a></h2>
+<p>Let’s start with a poorly constructed  Pyspark pipeline. We will apply the structure in it one step at a time.
+We will go over the codes so that at the end, all the pieces will make sense how this approach can help us to build a TDD data-pipeline.</p>
+<p>Let’s consider, we have a pipeline that consume files containing pageviews data and merge it into a final table.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Incremental file: input/page_views</span>
+<span class="sd">        email,pages</span>
+<span class="sd">        james@example.com,home</span>
+<span class="sd">        james@example.com,about</span>
+<span class="sd">        patricia@example.com,home</span>
+<span class="sd">Final Table::</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">        |email            |page_view|created_date|last_active|</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">        |james@example.com|10       |2020-01-01  |2020-07-04 |</span>
+<span class="sd">        |mary@example.com |100      |2020-02-04  |2020-02-04 |</span>
+<span class="sd">        |john@example.com |1        |2020-03-04  |2020-06-04 |</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">enableHiveSupport</span><span class="p">()</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+
+    <span class="n">page_views</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;pages&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span>
+                                       <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                       <span class="n">schema</span><span class="o">=</span><span class="n">page_views</span><span class="p">)</span>
+    <span class="n">inc_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
+    <span class="n">prev_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span>
+                         <span class="n">select</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
+                                 <span class="n">col</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                 <span class="n">current_date</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                 <span class="p">])</span>
+                         <span class="p">)</span>
+
+    <span class="n">df_transformed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span>
+                                 <span class="n">select</span><span class="p">([</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
+                                         <span class="p">(</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span>
+                                                                                         <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">created_date</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;created_date&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                         <span class="p">])</span>
+                                 <span class="p">)</span>
+
+    <span class="n">df_transformed</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+
+    <span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The application can be submitted on spark</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
+</pre></div>
+</div>
+<p>Let’s now look into modularising the application.</p>
+</div>
+<div class="section" id="handling-static-configurations">
+<h2>Handling static configurations<a class="headerlink" href="#handling-static-configurations" title="Permalink to this headline">¶</a></h2>
+<p>If we look closely to the above code, the file paths and other static configurations are tightly coupled with the code.
+For local execution we want to execute the code in isolation and we will avoid the side effects that can occur from I/O.</p>
+<p>Let’s decouple the static configurations as a JSON file <cite>configs/config.json</cite>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+  <span class="s2">&quot;page_views&quot;</span><span class="p">:</span> <span class="s2">&quot;/user/stabsumalam/pyspark-tdd-template/input/page_views&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;user_pageviews&quot;</span><span class="p">:</span> <span class="s2">&quot;stabsumalam_db.user_pageviews&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;output_path&quot;</span> <span class="p">:</span> <span class="s2">&quot;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="handling-spark-environments">
+<h2>Handling spark environments<a class="headerlink" href="#handling-spark-environments" title="Permalink to this headline">¶</a></h2>
+<p>It is not practical to test and debug Spark jobs by sending them to a cluster  using spark-submit and examining stack traces for clues on what went wrong.
+Fortunately we have <a class="reference external" href="https://pypi.org/project/pyspark/">Pypi Pyspark</a> locally on <a class="reference external" href="https://docs.pipenv.org">pipenv</a></p>
+<p>Our pipeline should only focus on the business transformations. Let’s take out the auxiliary heavy lifting to a separate module.
+This module can be reused for all other pipelines that follow a common structure as suggested in this project.</p>
+<p><a class="reference internal" href="dependencies.html#module-dependencies.job_submitter" title="dependencies.job_submitter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dependencies.job_submitter</span></code></a> takes care of the following</p>
+<ul class="simple">
+<li><p>Handles the creation of spark environment.</p></li>
+<li><p>Passes static job configuration parameters from <cite>configs/config.json</cite> to the job.</p></li>
+<li><p>Parses command line arguments to accept dynamic inputs and pass it to the job.</p></li>
+<li><p>Dynamically loads the requested job module and runs it.</p></li>
+</ul>
+<p>The job itself has to expose a <cite>run</cite> method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_spark_session</span><span class="p">(</span><span class="n">job_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create spark session to run the job</span>
+
+<span class="sd">    :param job_name: job name</span>
+<span class="sd">    :type job_name: str</span>
+<span class="sd">    :return: spark and logger</span>
+<span class="sd">    :rtype: Tuple[SparkSession,Log4j]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">appName</span><span class="p">(</span><span class="n">job_name</span><span class="p">)</span><span class="o">.</span><span class="n">enableHiveSupport</span><span class="p">()</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+    <span class="n">app_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;spark.app.id&#39;</span><span class="p">)</span>
+    <span class="n">log4j</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">_jvm</span><span class="o">.</span><span class="n">org</span><span class="o">.</span><span class="n">apache</span><span class="o">.</span><span class="n">log4j</span>
+    <span class="n">message_prefix</span> <span class="o">=</span> <span class="s1">&#39;&lt;&#39;</span> <span class="o">+</span> <span class="n">job_name</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">app_id</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">log4j</span><span class="o">.</span><span class="n">LogManager</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">message_prefix</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">spark</span><span class="p">,</span> <span class="n">logger</span>
+
+
+<span class="k">def</span> <span class="nf">load_config_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the configs/config.json file and parse as a dictionary</span>
+
+<span class="sd">    :param file_name: name of the config file</span>
+<span class="sd">    :return: config dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">conf</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conf</span>
+
+    <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1"> Not found&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parse_job_args</span><span class="p">(</span><span class="n">job_args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Reads the additional job_args and parse as a dictionary</span>
+
+<span class="sd">    :param job_args: extra job_args i.e. k1=v1 k2=v2</span>
+<span class="sd">    :return: config dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">a</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;=&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">job_args</span><span class="p">}</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Job submitter&#39;</span><span class="p">,</span>
+                                     <span class="n">usage</span><span class="o">=</span><span class="s1">&#39;--job job_name, --conf-file config_file_name, --job-args k1=v1 k2=v2&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--job&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;job name&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;job_name&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--conf-file&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Config file path&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--job-args&#39;</span><span class="p">,</span>
+                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Additional job arguments, It would be made part of config dict&#39;</span><span class="p">,</span>
+                        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+    <span class="n">job_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">job_name</span>
+    <span class="n">spark</span><span class="p">,</span> <span class="n">logger</span> <span class="o">=</span> <span class="n">create_spark_session</span><span class="p">(</span><span class="n">job_name</span><span class="p">)</span>
+    <span class="n">config_file</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">conf_file</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">conf_file</span> <span class="k">else</span> <span class="s1">&#39;configs/config.json&#39;</span>
+    <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">load_config_file</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">job_args</span><span class="p">:</span>
+        <span class="n">job_args</span> <span class="o">=</span> <span class="n">parse_job_args</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">job_args</span><span class="p">)</span>
+        <span class="n">config_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">job_args</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;calling job </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">job_name</span><span class="si">}</span><span class="s1">  with </span><span class="si">{</span><span class="n">config_dict</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">job</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;jobs.</span><span class="si">{</span><span class="n">job_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">job</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config_dict</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="modularize-the-code">
+<h2>Modularize the code<a class="headerlink" href="#modularize-the-code" title="Permalink to this headline">¶</a></h2>
+<p>Regardless of the complexity of a data-pipeline, this often reduces to defining a series of Extract, Transform and Load (ETL) jobs.</p>
+<p>So, 1st step to test the application is to modularize to address the below.</p>
+<ul class="simple">
+<li><p>Segregate the logic into testable modules.</p></li>
+<li><p>Separating out the side effects of reading and writing the data.</p></li>
+</ul>
+<p>Below is our pipeline structure:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="jobs.html#jobs.pipeline.extract" title="jobs.pipeline.extract"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.extract()</span></code></a> - deals with reading the input data and return the DataFrames.</p></li>
+<li><p><a class="reference internal" href="jobs.html#jobs.pipeline.transform" title="jobs.pipeline.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.transform()</span></code></a> - deals with defining the business logic and produce the final DataFrame.</p></li>
+<li><p><a class="reference internal" href="jobs.html#jobs.pipeline.load" title="jobs.pipeline.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.load()</span></code></a> - deals with saving the final data into the final destination.</p></li>
+<li><p><a class="reference internal" href="jobs.html#jobs.pipeline.run" title="jobs.pipeline.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.run()</span></code></a> - acts as the entry point for the pipeline and collaborate between different parts of the pipeline.</p></li>
+<li><p>We have taken out the schema for the DataFrames in <cite>ddl/schema.py</cite></p></li>
+</ul>
+<p>There is a really good blog  by <a class="reference external" href="https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/">Dr. Alex loannides</a>
+and <a class="reference external" href="https://developerzen.com/best-practices-writing-production-grade-pyspark-jobs-cb688ac4d20f#.wg3iv4kie">Eran Campf</a> about structuring ETL projects.
+Here We have a single module pipeline here with just singleton Extract, Transform and Load methods.
+Our overall project structure would look like.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">root/</span>
+<span class="go"> |-- configs/</span>
+<span class="go"> |   |-- config.json</span>
+<span class="go"> |-- dependencies/</span>
+<span class="go"> |   |-- job_submitter.py</span>
+<span class="go"> |-- ddl/</span>
+<span class="go"> |       |-- schema.py</span>
+<span class="go"> |-- jobs/</span>
+<span class="go"> |   |-- pipeline.py</span>
+<span class="go"> |-- tests/</span>
+<span class="go"> |   |-- test_data/</span>
+<span class="go"> |   |-- | -- employees/</span>
+<span class="go"> |   |-- | -- employees_report/</span>
+<span class="go"> |   |-- conftest.py</span>
+<span class="go"> |   |-- test_bed.json</span>
+<span class="go"> |   |-- test_pipeline.py</span>
+<span class="go"> |   Makefile</span>
+<span class="go"> |   Pipfile</span>
+<span class="go"> |   Pipfile.lock</span>
+</pre></div>
+</div>
+<p>Our final code looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read incremental file and historical data and return as DataFrames</span>
+
+<span class="sd">    :param spark: Spark session object.</span>
+<span class="sd">    :type spark: SparkSession</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: Spark DataFrames.</span>
+<span class="sd">    :rtype: DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;page_views&#39;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">page_views</span><span class="p">)</span>
+    <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;user_pageviews&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">inc_df</span><span class="p">,</span> <span class="n">prev_df</span>
+
+
+<span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Transform the data for final loading.</span>
+
+<span class="sd">    :param inc_df: Incremental DataFrame.</span>
+<span class="sd">    :type inc_df: DataFrame</span>
+<span class="sd">    :param prev_df: Final DataFrame.</span>
+<span class="sd">    :type prev_df: DataFrame</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: Transformed DataFrame.</span>
+<span class="sd">    :rtype: DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># calculating the metrics</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span>
+                         <span class="n">select</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
+                                 <span class="n">col</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                 <span class="n">lit</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;process_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                 <span class="p">])</span>
+                         <span class="p">)</span>
+
+    <span class="c1"># merging the data with historical records</span>
+    <span class="n">df_transformed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span>
+                                 <span class="n">select</span><span class="p">([</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
+                                         <span class="p">(</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span>
+                                                                                         <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">created_date</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;created_date&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                         <span class="p">])</span>
+                                 <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df_transformed</span>
+
+
+<span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Write data in final destination</span>
+
+<span class="sd">    :param df: DataFrame to save.</span>
+<span class="sd">    :type df: DataFrame</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: True</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_path&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Entry point to the pipeline</span>
+
+<span class="sd">    :param spark: SparkSession object</span>
+<span class="sd">    :type spark: SparkSession</span>
+<span class="sd">    :param config: job configurations and command lines</span>
+<span class="sd">    :param logger: Log4j Logger</span>
+<span class="sd">    :type logger: Log4j.Logger</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :return: True</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;pipeline is starting&#39;</span><span class="p">)</span>
+
+    <span class="c1"># execute the pipeline</span>
+    <span class="n">inc_data</span><span class="p">,</span> <span class="n">prev_data</span> <span class="o">=</span> <span class="n">extract</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">inc_df</span><span class="o">=</span><span class="n">inc_data</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">=</span><span class="n">prev_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;pipeline is complete&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="testing-setup">
+<h2>Testing setup<a class="headerlink" href="#testing-setup" title="Permalink to this headline">¶</a></h2>
+<p>Given that we have structured our ETL jobs in testable modules.
+We can feed it a small slice of ‘real-world’ production data that has been persisted locally(<cite>tests/test_data</cite>) and check it against expected results.
+We will be using <a class="reference external" href="https://docs.pytest.org/en/stable/">pytest</a> style tests for our pipeline,
+under the hood we will also leverage few features (i.e. mock) form <a class="reference external" href="https://docs.python.org/3/library/unittest.html">unittest</a></p>
+<p>Let’s look into the different functionality of our <a class="reference internal" href="tests.html#module-tests.conftest" title="tests.conftest"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tests.conftest</span></code></a></p>
+<p>The 1st function of it is to start a SparkSession locally for testing.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Start Spark, read configs, create the Dataframes and mocks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">job_submitter</span><span class="o">.</span><span class="n">create_spark_session</span><span class="p">(</span><span class="s1">&#39;test_pipeline&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">job_submitter</span><span class="o">.</span><span class="n">load_config_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_testbed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_mocks</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stop Spark</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teardown_testbed</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>We have an utility method <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_testbed" title="tests.conftest.SparkETLTests.setup_testbed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_testbed()</span></code></a> that reads the <cite>Testbed</cite> configurations to create the Dataframes in order to test out transform function.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+    <span class="k">def</span> <span class="nf">setup_testbed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the Dataframes and tables from the test files as mapped in tests/testbed.json, \</span>
+<span class="sd">        store those in instance variable named dataframes. \</span>
+<span class="sd">        It also enriches the test specific job configurations as per the test_bed.json</span>
+
+<span class="sd">        tests/test_data/page_views.csv</span>
+<span class="sd">        email,pages</span>
+<span class="sd">        james@example.com,home</span>
+<span class="sd">        james@example.com,about</span>
+<span class="sd">        patricia@example.com,home</span>
+
+<span class="sd">        ddl/schema.py</span>
+<span class="sd">        page_views = StructType(</span>
+<span class="sd">        [StructField(&#39;email&#39;, StringType(), True),</span>
+<span class="sd">        StructField(&#39;pages&#39;, StringType(), True)])</span>
+
+<span class="sd">        testbed.json</span>
+<span class="sd">        {</span>
+<span class="sd">        &quot;data&quot;: {</span>
+<span class="sd">        &quot;page_views&quot;: { &quot;file&quot;: &quot;tests/test_data/page_views.csv&quot; , &quot;schema&quot;: &quot;page_views&quot;}</span>
+<span class="sd">        }</span>
+<span class="sd">        }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;tests/test_bed.json&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">test_bed_conf</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">data_dict</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">test_bed_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;loading test data from testbed&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">df</span><span class="p">,</span> <span class="n">meta</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">dataframe</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file&#39;</span><span class="p">),</span>
+                                                                <span class="n">schema</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">),</span> <span class="kc">None</span><span class="p">),</span>
+                                                                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">file_options</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="n">df</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataframe</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;create database if not exists </span><span class="si">{</span><span class="n">df</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                    <span class="n">dataframe</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;hive&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;loaded</span><span class="si">{</span><span class="n">df</span><span class="si">}</span><span class="s1"> from </span><span class="si">{</span><span class="n">meta</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;file&quot;</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+                <span class="n">conf</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">test_bed_conf</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;config&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">conf</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;loaded test config </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;No test data to cook&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let’s now have a look into our testing code for the Transform method.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_pipeline_transform</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.transform method using small chunks of input data and expected output data\</span>
+<span class="sd">    to make sure the function is behaving as expected.</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># getting the input dataframes</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">testbed</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="s1">&#39;page_views&#39;</span><span class="p">]</span>
+    <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">testbed</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">]</span>
+    <span class="c1"># getting the expected dataframe</span>
+    <span class="n">expected_data</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">testbed</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="s1">&#39;exp_user_pageviews&#39;</span><span class="p">]</span>
+    <span class="c1"># actual data</span>
+    <span class="n">transformed_data</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">inc_df</span><span class="o">=</span><span class="n">inc_df</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">=</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+    <span class="c1"># comparing the actual and expected data</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">comapare_dataframes</span><span class="p">(</span><span class="n">df1</span><span class="o">=</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">df2</span><span class="o">=</span><span class="n">expected_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As you can see we have made available the a pytest fixture named <cite>testbed</cite>. This object stores the DataFrames and configs for testing in it’s member variables.
+We are passing the DataFrames created out of the test files and matching the output DataFrame using another helper function <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.comapare_dataframes" title="tests.conftest.SparkETLTests.comapare_dataframes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.comapare_dataframes()</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">comapare_dataframes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df1</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">df2</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">excluded_keys</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compares 2 DataFrames for exact match\</span>
+<span class="sd">        internally it use pandas.testing.assert_frame_equal</span>
+
+
+<span class="sd">        :param df1: processed data</span>
+<span class="sd">        :type df1: DataFrame</span>
+<span class="sd">        :param df2: gold standard expected data</span>
+<span class="sd">        :type df2: DataFrame</span>
+<span class="sd">        :return: True</span>
+<span class="sd">        :param excluded_keys: columns to be excluded from comparision, optional</span>
+<span class="sd">        :type excluded_keys: Union[List, str, None]</span>
+<span class="sd">        :rtype: Boolean</span>
+<span class="sd">        :raises: AssertionError Dataframe mismatch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">excluded_keys</span> <span class="o">=</span> <span class="n">excluded_keys</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">excluded_keys</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="k">else</span> <span class="p">[</span><span class="n">excluded_keys</span><span class="p">]</span>
+        <span class="n">df1</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="n">excluded_keys</span><span class="p">)</span>
+        <span class="n">df2</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="o">*</span><span class="n">excluded_keys</span><span class="p">)</span>
+        <span class="n">sort_columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">cols</span> <span class="ow">in</span> <span class="n">df1</span><span class="o">.</span><span class="n">dtypes</span><span class="p">]</span>
+        <span class="n">df1_sorted</span> <span class="o">=</span> <span class="n">df1</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">sort_columns</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">df2_sorted</span> <span class="o">=</span> <span class="n">df2</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="n">sort_columns</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">assert_frame_equal</span><span class="p">(</span><span class="n">df1_sorted</span><span class="p">,</span> <span class="n">df2_sorted</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+</div>
+<p>Since the I/O operations are already been separated out we can introspect their calling behaviour using mocks.
+These mocks are setup in <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_mocks" title="tests.conftest.SparkETLTests.setup_mocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_mocks()</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">setup_mocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mocking spark and dataframes to introspect the calling behaviour for unittesting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_read</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameReader</span><span class="p">)</span>
+        <span class="n">mock_write</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameWriter</span><span class="p">)</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">)</span><span class="o">.</span><span class="n">read</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_read</span><span class="p">)</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_df</span><span class="p">)</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_write</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And the code is tested using below block</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">test_pipeline_extract</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.extract method using the mocked spark session and introspect the calling pattern\</span>
+<span class="sd">    to make sure spark methods were called with intended arguments</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># calling the extract method with mocked spark and test config</span>
+    <span class="n">pipeline</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># introspecting the spark method call</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">page_views</span><span class="p">)</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">reset_mock</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">test_pipeline_load</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.load method using the mocked spark session and introspect the calling pattern\</span>
+<span class="sd">    to make sure spark methods were called with intended arguments</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># calling the extract method with mocked spark and test config</span>
+    <span class="n">pipeline</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># introspecting the spark method call</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>I have used the generic <a class="reference external" href="https://spark.apache.org/docs/2.3.0/api/python/_modules/pyspark/sql/readwriter.html#DataFrameReader.load">read</a> and <a class="reference external" href="https://spark.apache.org/docs/latest/api/python/_modules/pyspark/sql/readwriter.html#DataFrameWriter.save">write</a> module of spark for these mocks to work.</p>
+<p>Now, let’s look into the integration testing, We are now able to test out pipeline by mocking the return value of the I/O operations.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_run_integration</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.run method to make sure the integration is working fine\</span>
+<span class="sd">    It avoids reading and writing operations by mocking the load and extract method</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;jobs.pipeline.load&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mock_load</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;jobs.pipeline.extract&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mock_extract</span><span class="p">:</span>
+            <span class="n">mock_load</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">mock_extract</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span><span class="n">testbed</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="s1">&#39;page_views&#39;</span><span class="p">],</span> <span class="n">testbed</span><span class="o">.</span><span class="n">dataframes</span><span class="p">[</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">])</span>
+            <span class="n">status</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">logger</span><span class="p">)</span>
+            <span class="n">testbed</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The idea is to use immutable test files for performing the whole validation. Methods can be connected in terms of input and expected output, across different upstream and downstream modules.
+A proper regression can be leveraged by using this approach of immutable test data and plugged into a CICD deployment.</p>
+</div>
+<div class="section" id="running-the-example-locally">
+<h2>Running the example locally<a class="headerlink" href="#running-the-example-locally" title="Permalink to this headline">¶</a></h2>
+<p>We use <a class="reference external" href="https://docs.pipenv.org">pipenv</a> for managing project dependencies and Python environments (i.e. virtual environments).
+All development and production dependencies are described in the <cite>Pipfile</cite></p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pipenv</span>
+</pre></div>
+</div>
+<p>Additionally, you can have <a class="reference external" href="https://github.com/pyenv/pyenv">pyenv</a> to have the desired python enviroment.</p>
+<p>To execute the example unit test for this project run</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pipenv run python -m unittest tests/test_*.py</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="deploying-into-production">
+<h2>Deploying into production<a class="headerlink" href="#deploying-into-production" title="Permalink to this headline">¶</a></h2>
+<p>The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">make clean</span>
+<span class="go">make build</span>
+</pre></div>
+</div>
+<p>Now you can run the pipeline using below command</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span>SPARK_HOME/bin/spark-submit <span class="se">\</span>
+--py-files packages.zip <span class="se">\</span>
+--files configs/config.json <span class="se">\</span>
+dependencies/job_submitter.py --job pipeline --conf-file configs/config.json
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="jobs.html" class="btn btn-neutral float-right" title="jobs package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to pyspark-tdd-template’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, soyel.alam@ucdconnect.ie
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
