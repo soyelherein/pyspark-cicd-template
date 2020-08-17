@@ -1,1 +1,1 @@
-Link to the [documentation](https://pages.github.com/soyelherein/pyspark-tdd-template/intro.html)
+Link to the [documentation](https://pyspark-tdd-template.readthedocs.io/en/latest/intro.html)
