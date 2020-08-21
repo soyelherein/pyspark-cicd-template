@@ -5,7 +5,6 @@ pipeline {
       steps {
         echo 'pipeline template'
         sh 'pip install -r requirements.txt'
-        pytest
       }
     }
     stage('test') {
