@@ -4,6 +4,7 @@ pipeline {
     stage('build') {
       steps {
         echo 'pipeline template'
+        echo $JAVA_HOME
         sh 'pip install -r requirements.txt'
       }
     }
