@@ -4,13 +4,8 @@ pipeline {
     stage('build') {
       steps {
         echo 'pipeline template'
-        sh 'python -m pytest'
+        sh 'docker build . -t xxx'
       }
-    }
-    stage('test') {
-      steps {
-        sh 'pytest'
-      }   
     }
   }
 }
