@@ -4,7 +4,7 @@ pipeline {
     stage('build') {
       steps {
         echo 'pipeline template'
-        sh 'python3 -m pytest'
+        sh 'python -m pytest'
       }
     }
     stage('test') {
