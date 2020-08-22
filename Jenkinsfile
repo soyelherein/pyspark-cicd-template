@@ -4,7 +4,7 @@ pipeline {
     stage('build') {
       steps {
         echo 'pipeline template'
-        sh 'docker build . -t xxx'
+        sh 'docker build -t xxx'
       }
     }
   }
