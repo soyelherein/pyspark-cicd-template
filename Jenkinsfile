@@ -3,8 +3,10 @@ pipeline {
   stages {
     stage('build') {
       steps {
+      	def dockerHome = tool name: 'docker', type: 'dockerTool'
+      	def dockerCMD = "${dockerHome}/bin/docker"
         echo 'pipeline template'
-        sh 'docker build -t xxx'
+        sh "${dockerCMD} build -t xxx"
       }
     }
   }
