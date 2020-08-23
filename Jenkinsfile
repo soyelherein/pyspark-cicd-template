@@ -7,7 +7,7 @@ pipeline {
       	def dockerHome = tool name: 'local-docker', type: 'dockerTool'
       	def dockerCMD = "${dockerHome}/bin/docker"
         echo 'pipeline template'
-        sh "${dockerCMD} build -t xxx"
+        sh "${dockerCMD} build . -t xxx"
         }
       }
     }
