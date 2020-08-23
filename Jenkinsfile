@@ -1,13 +1,12 @@
 pipeline {
-  agent any
+  agent {dockerfile true}
   stages {
     stage('build') {
       steps {
         script{
-      	def dockerHome = tool name: 'local-docker', type: 'dockerTool'
-      	def dockerCMD = "${dockerHome}/bin/docker"
         echo 'pipeline template'
-        sh "${dockerCMD} build . -t xxx"
+        sh "pip3 install --dev"
+        sh "pytest"
         }
       }
     }
