@@ -2,10 +2,12 @@ pipeline {
   agent any
   stages {
     stage('build') {
-      	def dockerHome = tool name: 'docker', type: 'dockerTool'
+      steps {
+      	def dockerHome = tool name: 'local-docker', type: 'dockerTool'
       	def dockerCMD = "${dockerHome}/bin/docker"
         echo 'pipeline template'
         sh "${dockerCMD} build -t xxx"
+      }
     }
   }
 }
