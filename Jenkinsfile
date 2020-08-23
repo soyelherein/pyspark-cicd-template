@@ -5,8 +5,8 @@ pipeline {
       steps {
         script{
         echo 'pipeline template'
-        sh "pip3 install --dev"
-        sh "pytest"
+        sh "pipenv install --dev"
+        sh "pipenv run pytest"
         }
       }
     }
