@@ -19,5 +19,5 @@ RUN pip3 install --upgrade pip && \
 RUN chmod 777 /usr/src/app
 
 ENV PIPENV_CACHE_DIR  /usr/src/app
-	PIPENV_VENV_IN_PROJECT  1
-	JAVA_HOME  /usr/lib/jvm/java-8-openjdk-amd64
+ENV PIPENV_VENV_IN_PROJECT  1
+ENV JAVA_HOME  /usr/lib/jvm/java-8-openjdk-amd64
