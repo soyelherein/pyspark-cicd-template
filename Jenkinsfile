@@ -5,6 +5,11 @@ pipeline {
       steps {
         script{
         echo 'pipeline template'
+        sh 'echo $JAVA_HOME'
+        sh 'echo $PATH'
+        sh 'echo $PYSPARK_SUBMIT_ARGS'
+        sh 'echo $PIPENV_VENV_IN_PROJECT'
+        sh 'echo $PIPENV_CACHE_DIR'
         sh "cd /usr/src/app"
         sh "ls -lrt"
         sh "pipenv install --dev"
