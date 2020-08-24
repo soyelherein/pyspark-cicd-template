@@ -8,7 +8,7 @@ COPY . .
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -q -y openjdk-8-jdk && \
-    apt-get install -y python3-pip python3.6 libkrb5-dev zip
+    apt-get install -y python3-pip python3.6
 
 RUN pip3 install --upgrade pip && \
     pip3 install --user \
