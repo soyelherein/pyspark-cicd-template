@@ -6,6 +6,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 RUN apt-get update && \
+	add-apt-repository -y ppa:webupd8team/java \
     apt-get upgrade -y && \
     apt-get install -q -y oracle-java8-installer && \
     apt-get install -y python3-pip python3.6
