@@ -5,15 +5,15 @@ ENV LANG=C.UTF-8
 WORKDIR /usr/src/app
 COPY . .
 
-RUN sudo add-apt-repository ppa:webupd8team/java
+RUN add-apt-repository ppa:webupd8team/java
 
-RUN sudo apt-get update && \
+RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -q -y oracle-java8-installer && \
     apt-get install -y python3-pip python3.6
     
 RUN java -version
-RUN sudo update-alternatives --config java
+RUN update-alternatives --config java
 RUN cd /usr/lib/jvm/java-8-oracle && ls -lrt
 
 RUN pip3 install --upgrade pip && \
