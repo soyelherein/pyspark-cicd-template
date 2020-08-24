@@ -6,6 +6,7 @@ pipeline {
         script{
         echo 'pipeline template'
         sh 'echo $JAVA_HOME'
+        sh 'java -version'
         sh 'echo $PATH'
         sh 'echo $PYSPARK_SUBMIT_ARGS'
         sh 'echo $PIPENV_VENV_IN_PROJECT'
