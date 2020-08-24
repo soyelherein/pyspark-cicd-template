@@ -13,6 +13,7 @@ pipeline {
         sh "cd /usr/src/app"
         sh "ls -lrt"
         sh "pipenv install --dev"
+        sh "which python3"
         sh "pipenv run pytest"
         }
       }
