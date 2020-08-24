@@ -5,8 +5,6 @@ ENV LANG=C.UTF-8
 WORKDIR /usr/src/app
 COPY . .
 
-RUN java -version
-
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -q -y openjdk-8-jdk && \
@@ -25,5 +23,5 @@ RUN which python3
 ENV PIPENV_CACHE_DIR  /usr/src/app
 ENV PIPENV_VENV_IN_PROJECT  1
 ENV JAVA_HOME  /usr/lib/jvm/java-8-openjdk-amd64
-ENV PYSPARK_SUBMIT_ARGS "--master local pyspark-shell"
+ENV PYSPARK_SUBMIT_ARGS --master local pyspark-shell
 ENV PATH="/usr/lib/jvm/java-8-openjdk-amd64/bin:/usr/bin:${PATH}"
