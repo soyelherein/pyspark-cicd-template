@@ -26,6 +26,6 @@ RUN which python3
 ENV PIPENV_CACHE_DIR  /usr/src/app
 ENV PIPENV_VENV_IN_PROJECT  1
 ENV JAVA_HOME  /usr/lib/jvm/java-8-oracle
-ENV PYSPARK_DRIVER_PYTHON 
+ENV PYSPARK_DRIVER_PYTHON  /usr/bin/python3
 ENV PYSPARK_SUBMIT_ARGS "--master local pyspark-shell"
 ENV PATH="/usr/lib/jvm/java-8-oracle/bin:/usr/bin:${PATH}"
