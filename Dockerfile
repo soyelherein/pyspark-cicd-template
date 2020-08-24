@@ -7,8 +7,9 @@ COPY . .
 
 RUN apt-get update && \
     apt-get install -y software-properties-common &&\ 
-	add-apt-repository -y ppa:webupd8team/java && \
-    apt-get upgrade -y && \
+	add-apt-repository -y ppa:webupd8team/java &&
+
+RUN apt-get upgrade -y && \
     apt-get install -q -y oracle-java8-installer && \
     apt-get install -y python3-pip python3.6
     
