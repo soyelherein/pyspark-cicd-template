@@ -6,6 +6,7 @@ pipeline {
         script{
         echo 'pipeline template'
         sh "cd /usr/src/app"
+        sh "ls -lrt"
         sh "cd /usr/src/app && pipenv install --dev"
         sh "cd /usr/src/app && pipenv run pytest"
         }
