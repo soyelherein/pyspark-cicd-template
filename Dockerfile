@@ -6,6 +6,7 @@ WORKDIR /usr/src/app
 COPY . .
 
 RUN apt-get update && \
+    apt-get install software-properties-common &&\ 
 	add-apt-repository -y ppa:webupd8team/java && \
     apt-get upgrade -y && \
     apt-get install -q -y oracle-java8-installer && \
