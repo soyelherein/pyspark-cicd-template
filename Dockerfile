@@ -5,8 +5,6 @@ ENV LANG=C.UTF-8
 WORKDIR /usr/src/app
 COPY . .
 
-RUN add-apt-repository ppa:webupd8team/java
-
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -q -y oracle-java8-installer && \
