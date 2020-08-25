@@ -12,10 +12,14 @@ pipeline {
         }
       }
     }
-    stage('test'){
+    stage("test"){
       steps{
         sh "pipenv run pytest"
       }
+    }
+    stage("prepare artifacts")
+    steps{
+      sh "make build"
     }
   }
 }
