@@ -28,6 +28,7 @@ def create_spark_session(job_name: str):
     :rtype: Tuple[SparkSession,Log4j]
     """
     spark: SparkSession = SparkSession.builder.appName(job_name).enableHiveSupport().getOrCreate()
+    spark.conf.set("spark.jars.ivy", "/tmp/.ivy")
     app_id: str = spark.conf.get('spark.app.id')
     log4j = spark._jvm.org.apache.log4j
     message_prefix = '<' + job_name + ' ' + app_id + '>'
