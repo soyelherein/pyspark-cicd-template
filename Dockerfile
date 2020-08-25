@@ -13,12 +13,12 @@ RUN whoami
 
 RUN echo $HOME
 
-RUN apt-get -y install sudo
-
 RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -q -y openjdk-8-jdk && \
+	apt-get -y install sudo
+
+RUN apt-get install -q -y openjdk-8-jdk && \
     apt-get install -y python3-pip python3.6
+
 RUN java -version
 RUN cd /usr/lib/jvm/java-8-openjdk-amd64 && ls -lrt
 
