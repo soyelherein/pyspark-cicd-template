@@ -17,9 +17,10 @@ pipeline {
         sh "pipenv run pytest"
       }
     }
-    stage("prepare artifacts")
-    steps{
-      sh "make build"
+    stage("prepare artifacts"){
+      steps{
+        sh "make build"
+      }
     }
   }
 }
