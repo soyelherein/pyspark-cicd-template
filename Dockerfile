@@ -26,3 +26,4 @@ ENV PIPENV_VENV_IN_PROJECT  1
 ENV JAVA_HOME  /usr/lib/jvm/java-8-openjdk-amd64
 ENV PYSPARK_SUBMIT_ARGS --master local pyspark-shell --conf spark.jars.ivy=/tmp/.ivy
 ENV PATH="/usr/lib/jvm/java-8-openjdk-amd64/bin:/usr/bin:${PATH}"
+USER root
