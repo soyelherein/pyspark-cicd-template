@@ -8,6 +8,7 @@ pipeline {
         sh 'echo $JAVA_HOME'
         sh 'java -version'
         sh 'echo $PATH'
+        sh 'whoami'
         sh 'echo $PYSPARK_SUBMIT_ARGS'
         sh 'echo $PIPENV_VENV_IN_PROJECT'
         sh 'echo $PIPENV_CACHE_DIR'

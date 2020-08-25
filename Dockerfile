@@ -20,6 +20,8 @@ RUN chmod 777 /usr/src/app
 
 RUN which python3
 
+RUN whoami
+
 ENV PIPENV_CACHE_DIR  /usr/src/app
 ENV HOME  /usr/src/app
 ENV PIPENV_VENV_IN_PROJECT  1
