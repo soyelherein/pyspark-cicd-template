@@ -1,10 +1,14 @@
 pipeline {
-  agent {dockerfile true}
+  agent {dockerfile {
+  args '-u root --privileged'}
+  }
   stages {
     stage('build') {
       steps {
         script{
         echo 'pipeline template'
+        sh 'whoami'
+        sh 'sudo su'
         sh 'echo $JAVA_HOME'
         sh 'java -version'
         sh 'echo $PATH'
