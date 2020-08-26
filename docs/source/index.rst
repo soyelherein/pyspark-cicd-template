@@ -1,15 +1,19 @@
-.. pyspark-cicd-project documentation master file, created by
-   sphinx-quickstart on Wed Aug 26 01:37:21 2020.
+.. pyspark-tdd-template documentation master file, created by
+   sphinx-quickstart on Mon Aug  3 00:04:10 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to pyspark-cicd-project's documentation!
+Welcome to pyspark-tdd-template's documentation!
 ================================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   intro
+   jobs
+   tests
+   dependencies
 
 
 Indices and tables
