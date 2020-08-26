@@ -15,8 +15,8 @@ RUN pip3 install --upgrade pip && \
 
 ENV JAVA_HOME  /usr/lib/jvm/java-8-openjdk-amd64
 
+WORKDIR /usr/src/app
+
 RUN useradd jenkins -d /usr/src/app && echo "jenkins:jenkins" | chpasswd
 
 RUN chown -R jenkins:jenkins /usr/src/app
-
-WORKDIR /usr/src/app
