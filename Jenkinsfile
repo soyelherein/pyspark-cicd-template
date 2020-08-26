@@ -17,10 +17,14 @@ pipeline {
         sh "pipenv run pytest"
       }
     }
-    stage("prepare artifacts"){
+    stage("prepare artifact"){
       steps{
         sh "make build"
       }
+    }
+    stage("publish artifact")
+      steps{
+        sh "aws s3 ls"
     }
   }
 }
