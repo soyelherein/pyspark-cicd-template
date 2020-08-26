@@ -1,0 +1,315 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>jobs.pipeline &mdash; pyspark-cicd-project 0.0.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> pyspark-cicd-project
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../jobs.html"><cite>Jobs</cite> package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tests.html"><cite>Tests</cite> package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dependencies.html"><cite>Dependencies</cite> package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyspark-cicd-project</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>jobs.pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for jobs.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2020 soyel.alam@ucdconnect.ie</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql</span> <span class="kn">import</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">SparkSession</span>
+<span class="kn">from</span> <span class="nn">pyspark.sql.functions</span> <span class="kn">import</span> <span class="n">col</span><span class="p">,</span> <span class="n">concat_ws</span><span class="p">,</span> <span class="n">lit</span><span class="p">,</span> <span class="n">coalesce</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">ddl</span> <span class="kn">import</span> <span class="n">schema</span>
+
+
+<div class="viewcode-block" id="extract"><a class="viewcode-back" href="../../jobs.html#jobs.pipeline.extract">[docs]</a><span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Read incremental file and historical data and return as DataFrames</span>
+
+<span class="sd">    :param spark: Spark session object.</span>
+<span class="sd">    :type spark: SparkSession</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: Spark DataFrames.</span>
+<span class="sd">    :rtype: DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;page_views&#39;</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">page_views</span><span class="p">)</span>
+    <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;user_pageviews&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">inc_df</span><span class="p">,</span> <span class="n">prev_df</span></div>
+
+
+<div class="viewcode-block" id="transform"><a class="viewcode-back" href="../../jobs.html#jobs.pipeline.transform">[docs]</a><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Transform the data for final loading.</span>
+
+<span class="sd">    :param inc_df: Incremental DataFrame.</span>
+<span class="sd">    :type inc_df: DataFrame</span>
+<span class="sd">    :param prev_df: Final DataFrame.</span>
+<span class="sd">    :type prev_df: DataFrame</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: Transformed DataFrame.</span>
+<span class="sd">    :rtype: DataFrame</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># calculating the metrics</span>
+    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span>
+                         <span class="n">select</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
+                                 <span class="n">col</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                 <span class="n">lit</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;process_date&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                 <span class="p">])</span>
+                         <span class="p">)</span>
+
+    <span class="c1"># merging the data with historical records</span>
+    <span class="n">df_transformed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span>
+                                 <span class="n">select</span><span class="p">([</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
+                                         <span class="p">(</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span>
+                                                                                         <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">created_date</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;created_date&#39;</span><span class="p">),</span>
+                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                             <span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                         <span class="p">])</span>
+                                 <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">df_transformed</span></div>
+
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../jobs.html#jobs.pipeline.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Write data in final destination</span>
+
+<span class="sd">    :param df: DataFrame to save.</span>
+<span class="sd">    :type df: DataFrame</span>
+<span class="sd">    :param config: job configuration</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :param logger: Py4j Logger</span>
+<span class="sd">    :rtype logger: Py4j.Logger</span>
+<span class="sd">    :return: True</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output_path&#39;</span><span class="p">],</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="run"><a class="viewcode-back" href="../../jobs.html#jobs.pipeline.run">[docs]</a><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Entry point to the pipeline</span>
+
+<span class="sd">    :param spark: SparkSession object</span>
+<span class="sd">    :type spark: SparkSession</span>
+<span class="sd">    :param config: job configurations and command lines</span>
+<span class="sd">    :param logger: Log4j Logger</span>
+<span class="sd">    :type logger: Log4j.Logger</span>
+<span class="sd">    :type config: Dict</span>
+<span class="sd">    :return: True</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;pipeline is starting&#39;</span><span class="p">)</span>
+
+    <span class="c1"># execute the pipeline</span>
+    <span class="n">inc_data</span><span class="p">,</span> <span class="n">prev_data</span> <span class="o">=</span> <span class="n">extract</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">transform</span><span class="p">(</span><span class="n">inc_df</span><span class="o">=</span><span class="n">inc_data</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">=</span><span class="n">prev_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;pipeline is complete&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, soyel.alam@ucdconnect.ie
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
