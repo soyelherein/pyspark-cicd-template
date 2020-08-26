@@ -22,9 +22,10 @@ pipeline {
         sh "make build"
       }
     }
-    stage("publish artifact")
+    stage("publish artifact"){
       steps{
         sh "aws s3 ls"
+      }
     }
   }
 }
