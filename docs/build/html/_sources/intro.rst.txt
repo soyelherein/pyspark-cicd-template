@@ -180,7 +180,7 @@ To execute the example unit test for this project run
 Building Artifact
 ------------------
 
-The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together
+The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together in a packages.zip file
 
 .. code-block:: console
 
