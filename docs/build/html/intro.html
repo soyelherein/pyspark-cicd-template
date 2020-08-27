@@ -85,13 +85,18 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#initial-pyspark-code">Initial Pyspark code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#handling-static-configurations">Handling static configurations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#handling-spark-environments">Handling spark environments</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#modularize-the-code">Modularize the code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#testing-setup">Testing setup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#running-the-example-locally">Running the example locally</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#deploying-into-production">Deploying into production</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structuring-etl-application">Structuring ETL application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#handling-static-configurations">Handling static configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#handling-spark-environments">Handling spark environments</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modularize-the-code">Modularize the code</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#testbed-setup">Testbed Setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-example-locally">Running the example locally</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#building-artifact">Building Artifact</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#cicd">CICD</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="jobs.html"><cite>Jobs</cite> package</a></li>
@@ -164,22 +169,22 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>There are a few good Blog about modularising, packaging and structuring the data pipelines for Spark jobs.
-However, the testing part is often neglected or covered from very top level.
-Data application testing is different and a pipeline change in the logic is always prone to breaking the logic somewhere else.</p>
-<p>This project discusses on a template for data pipeline project using Apache Spark and its Python(<cite>PySpark</cite>) APIs with special focus on data-pipeline testing.
-But, before we deep dive, We need to touch upon how we can structure our code to use of the approach outlined here.
+<p>This blog discusses about developing, testing and deploying data pipelines solely on our local workstation.
+As a data engineer, on daily basis we face the challenge of not being able to test the functionality of our code.
+Unless performing sort of UAT on actual production like data in some UAT/DEV/PreProd environment.
+This project discusses on a template for data pipelines using Apache Spark and its Python(<cite>PySpark</cite>) APIs.
+We will mainly focus on a testing framework and CICD using a small sample of production like data stored in csv files.
+I call this approach as Testbed, which can be further leveraged to a small regression to have the overall confidence on the application before it is deployed.</p>
+<p>But, before we deep dive, We need to touch upon the modularising of our application to testable units and avoid side effects.
 This project covers the following topics:</p>
 <ul class="simple">
-<li><p>Structuring ETL codes into testable modules.</p></li>
-<li><p>Setting up configurations and test data(Testbed).</p></li>
-<li><p>Boilerplate pytest style testcases for PySpark jobs.</p></li>
-<li><p>Packaging and submitting jobs in the cluster.</p></li>
+<li><p>Structuring ETL application.</p></li>
+<li><p>Testbed Setup.</p></li>
+<li><p>Unittesting.</p></li>
+<li><p>CICD.</p></li>
 </ul>
-<div class="section" id="initial-pyspark-code">
-<h2>Initial Pyspark code<a class="headerlink" href="#initial-pyspark-code" title="Permalink to this headline">¶</a></h2>
-<p>Let’s start with a poorly constructed  Pyspark pipeline. We will apply the structure in it one step at a time.
-We will go over the codes so that at the end, all the pieces will make sense how this approach can help us to build a TDD data-pipeline.</p>
+<div class="section" id="structuring-etl-application">
+<h2>Structuring ETL application<a class="headerlink" href="#structuring-etl-application" title="Permalink to this headline">¶</a></h2>
 <p>Let’s consider, we have a pipeline that consume files containing pageviews data and merge it into a final table.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
 <span class="sd">&quot;&quot;&quot;</span>
@@ -242,13 +247,36 @@ We will go over the codes so that at the end, all the pieces will make sense how
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
 </pre></div>
 </div>
-<p>Let’s now look into modularising the application.</p>
+<p>Ok, you have already pointed out many flaws in this code, so let’s address those.
+We will briefly cover this part, the idea here is taken from well documented blog  by <a class="reference external" href="https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/">Dr. Alex loannides</a> .
+Our overall project structure would look like.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">root/</span>
+<span class="go"> |-- configs/</span>
+<span class="go"> |   |-- config.json</span>
+<span class="go"> |-- dependencies/</span>
+<span class="go"> |   |-- job_submitter.py</span>
+<span class="go"> |-- ddl/</span>
+<span class="go"> |       |-- schema.py</span>
+<span class="go"> |-- jobs/</span>
+<span class="go"> |   |-- pipeline.py</span>
+<span class="go"> |-- tests/</span>
+<span class="go"> |   |-- test_data/</span>
+<span class="go"> |   |-- | -- employees/</span>
+<span class="go"> |   |-- | -- employees_report/</span>
+<span class="go"> |   |-- conftest.py</span>
+<span class="go"> |   |-- test_bed.json</span>
+<span class="go"> |   |-- test_pipeline.py</span>
+<span class="go"> |       Dockerfile</span>
+<span class="go"> |       Jenkinsfile</span>
+<span class="go"> |   Makefile</span>
+<span class="go"> |   Pipfile</span>
+<span class="go"> |   Pipfile.lock</span>
+</pre></div>
 </div>
 <div class="section" id="handling-static-configurations">
-<h2>Handling static configurations<a class="headerlink" href="#handling-static-configurations" title="Permalink to this headline">¶</a></h2>
-<p>If we look closely to the above code, the file paths and other static configurations are tightly coupled with the code.
-For local execution we want to execute the code in isolation and we will avoid the side effects that can occur from I/O.</p>
-<p>Let’s decouple the static configurations as a JSON file <cite>configs/config.json</cite>.</p>
+<h3>Handling static configurations<a class="headerlink" href="#handling-static-configurations" title="Permalink to this headline">¶</a></h3>
+<p>First flaw you noticed is the file paths and other static configurations are tightly coupled with the code.
+Let’s decouple the static configurations in a JSON file <cite>configs/config.json</cite>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
   <span class="s2">&quot;page_views&quot;</span><span class="p">:</span> <span class="s2">&quot;/user/stabsumalam/pyspark-tdd-template/input/page_views&quot;</span><span class="p">,</span>
   <span class="s2">&quot;user_pageviews&quot;</span><span class="p">:</span> <span class="s2">&quot;stabsumalam_db.user_pageviews&quot;</span><span class="p">,</span>
@@ -256,21 +284,19 @@ For local execution we want to execute the code in isolation and we will avoid t
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>For isolated testing we will now be able to override few of these in later section.</p>
 </div>
 <div class="section" id="handling-spark-environments">
-<h2>Handling spark environments<a class="headerlink" href="#handling-spark-environments" title="Permalink to this headline">¶</a></h2>
+<h3>Handling spark environments<a class="headerlink" href="#handling-spark-environments" title="Permalink to this headline">¶</a></h3>
 <p>It is not practical to test and debug Spark jobs by sending them to a cluster  using spark-submit and examining stack traces for clues on what went wrong.
-Fortunately we have <a class="reference external" href="https://pypi.org/project/pyspark/">Pypi Pyspark</a> locally on <a class="reference external" href="https://docs.pipenv.org">pipenv</a></p>
-<p>Our pipeline should only focus on the business transformations. Let’s take out the auxiliary heavy lifting to a separate module.
-This module can be reused for all other pipelines that follow a common structure as suggested in this project.</p>
+Our pipeline should only focus on the business transformations.
+Fortunately we can use <a class="reference external" href="https://pypi.org/project/pyspark/">Pypi Pyspark</a> along with <a class="reference external" href="https://docs.pipenv.org">pipenv</a> to manage an isolated environment.
+More on this on <cite>running the example locally</cite> section
+Let’s take out the heavy lifting to a separate module.
+This module can be reused for all other pipelines that follow this common structure.</p>
 <p><a class="reference internal" href="dependencies.html#module-dependencies.job_submitter" title="dependencies.job_submitter"><code class="xref py py-mod docutils literal notranslate"><span class="pre">dependencies.job_submitter</span></code></a> takes care of the following</p>
-<ul class="simple">
-<li><p>Handles the creation of spark environment.</p></li>
-<li><p>Passes static job configuration parameters from <cite>configs/config.json</cite> to the job.</p></li>
-<li><p>Parses command line arguments to accept dynamic inputs and pass it to the job.</p></li>
-<li><p>Dynamically loads the requested job module and runs it.</p></li>
-</ul>
-<p>The job itself has to expose a <cite>run</cite> method.</p>
+<p>Besides handling the spark session, In parses the <cite>configs/config.json</cite> and any dynamic command line arguments then execute the requested job.
+The job itself has to expose a <cite>run</cite> method that is covered in the below section.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">create_spark_session</span><span class="p">(</span><span class="n">job_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create spark session to run the job</span>
 
@@ -339,46 +365,17 @@ This module can be reused for all other pipelines that follow a common structure
 </div>
 </div>
 <div class="section" id="modularize-the-code">
-<h2>Modularize the code<a class="headerlink" href="#modularize-the-code" title="Permalink to this headline">¶</a></h2>
-<p>Regardless of the complexity of a data-pipeline, this often reduces to defining a series of Extract, Transform and Load (ETL) jobs.</p>
-<p>So, 1st step to test the application is to modularize to address the below.</p>
-<ul class="simple">
-<li><p>Segregate the logic into testable modules.</p></li>
-<li><p>Separating out the side effects of reading and writing the data.</p></li>
-</ul>
-<p>Below is our pipeline structure:</p>
+<h3>Modularize the code<a class="headerlink" href="#modularize-the-code" title="Permalink to this headline">¶</a></h3>
+<p>Regardless of the complexity of a data-pipeline, this often reduces to defining a series of Extract, Transform and Load (ETL) jobs.
+Now let’s modularise the code in such a way that Transform is free from side effects(here IO). IO bound Extract and Load can be tested using mocks.</p>
+<p>Below is our job structure:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="jobs.html#jobs.pipeline.extract" title="jobs.pipeline.extract"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.extract()</span></code></a> - deals with reading the input data and return the DataFrames.</p></li>
 <li><p><a class="reference internal" href="jobs.html#jobs.pipeline.transform" title="jobs.pipeline.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.transform()</span></code></a> - deals with defining the business logic and produce the final DataFrame.</p></li>
 <li><p><a class="reference internal" href="jobs.html#jobs.pipeline.load" title="jobs.pipeline.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.load()</span></code></a> - deals with saving the final data into the final destination.</p></li>
 <li><p><a class="reference internal" href="jobs.html#jobs.pipeline.run" title="jobs.pipeline.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jobs.pipeline.run()</span></code></a> - acts as the entry point for the pipeline and collaborate between different parts of the pipeline.</p></li>
-<li><p>We have taken out the schema for the DataFrames in <cite>ddl/schema.py</cite></p></li>
+<li><p>We have taken out the schema for the DataFrames in <cite>ddl/schema.py</cite> so that we can leverage the structure to construct the test data.</p></li>
 </ul>
-<p>There is a really good blog  by <a class="reference external" href="https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/">Dr. Alex loannides</a>
-and <a class="reference external" href="https://developerzen.com/best-practices-writing-production-grade-pyspark-jobs-cb688ac4d20f#.wg3iv4kie">Eran Campf</a> about structuring ETL projects.
-Here We have a single module pipeline here with just singleton Extract, Transform and Load methods.
-Our overall project structure would look like.</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">root/</span>
-<span class="go"> |-- configs/</span>
-<span class="go"> |   |-- config.json</span>
-<span class="go"> |-- dependencies/</span>
-<span class="go"> |   |-- job_submitter.py</span>
-<span class="go"> |-- ddl/</span>
-<span class="go"> |       |-- schema.py</span>
-<span class="go"> |-- jobs/</span>
-<span class="go"> |   |-- pipeline.py</span>
-<span class="go"> |-- tests/</span>
-<span class="go"> |   |-- test_data/</span>
-<span class="go"> |   |-- | -- employees/</span>
-<span class="go"> |   |-- | -- employees_report/</span>
-<span class="go"> |   |-- conftest.py</span>
-<span class="go"> |   |-- test_bed.json</span>
-<span class="go"> |   |-- test_pipeline.py</span>
-<span class="go"> |   Makefile</span>
-<span class="go"> |   Pipfile</span>
-<span class="go"> |   Pipfile.lock</span>
-</pre></div>
-</div>
 <p>Our final code looks like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
 <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">DataFrame</span><span class="p">]:</span>
@@ -479,13 +476,16 @@ Our overall project structure would look like.</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="testing-setup">
-<h2>Testing setup<a class="headerlink" href="#testing-setup" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="testbed-setup">
+<h2>Testbed Setup<a class="headerlink" href="#testbed-setup" title="Permalink to this headline">¶</a></h2>
 <p>Given that we have structured our ETL jobs in testable modules.
-We can feed it a small slice of ‘real-world’ production data that has been persisted locally(<cite>tests/test_data</cite>) and check it against expected results.
+We can now test the IO bound Extract and Load using mock.
+In our idempotent Transform function we will feed a small slice(maybe few hundreds would be enough to test the code) of ‘real-world’ production data, locally stored in csv. Then check it against expected results.
 We will be using <a class="reference external" href="https://docs.pytest.org/en/stable/">pytest</a> style tests for our pipeline,
 under the hood we will also leverage few features (i.e. mock) form <a class="reference external" href="https://docs.python.org/3/library/unittest.html">unittest</a></p>
-<p>Let’s look into the different functionality of our <a class="reference internal" href="tests.html#module-tests.conftest" title="tests.conftest"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tests.conftest</span></code></a></p>
+<p>All the setup and helper functions ate in <a class="reference internal" href="tests.html#module-tests.conftest" title="tests.conftest"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tests.conftest</span></code></a> so that the developer can focus on the testing and need not worry about creating dataframes/test spark session/mocks etc etc.
+Let’s look into the different functionality</p>
 <p>The 1st function of it is to start a SparkSession locally for testing.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Start Spark, read configs, create the Dataframes and mocks</span>
@@ -501,7 +501,48 @@ under the hood we will also leverage few features (i.e. mock) form <a class="ref
         <span class="bp">self</span><span class="o">.</span><span class="n">teardown_testbed</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>We have an utility method <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_testbed" title="tests.conftest.SparkETLTests.setup_testbed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_testbed()</span></code></a> that reads the <cite>Testbed</cite> configurations to create the Dataframes in order to test out transform function.</p>
+<p>Since the I/O operations are already been separated out we can introspect their calling behaviour using mocks.
+These mocks are setup in <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_mocks" title="tests.conftest.SparkETLTests.setup_mocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_mocks()</span></code></a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">setup_mocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mocking spark and dataframes to introspect the calling behaviour for unittesting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">mock_read</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameReader</span><span class="p">)</span>
+        <span class="n">mock_write</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameWriter</span><span class="p">)</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">)</span><span class="o">.</span><span class="n">read</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_read</span><span class="p">)</span>
+        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_df</span><span class="p">)</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_write</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And the code is tested using below block</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="k">def</span> <span class="nf">test_pipeline_extract</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.extract method using the mocked spark session and introspect the calling pattern\</span>
+<span class="sd">    to make sure spark methods were called with intended arguments</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># calling the extract method with mocked spark and test config</span>
+    <span class="n">pipeline</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># introspecting the spark method call</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">page_views</span><span class="p">)</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">reset_mock</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">test_pipeline_load</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test pipeline.load method using the mocked spark session and introspect the calling pattern\</span>
+<span class="sd">    to make sure spark methods were called with intended arguments</span>
+<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># calling the extract method with mocked spark and test config</span>
+    <span class="n">pipeline</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># introspecting the spark method call</span>
+    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As you notice we have made available the a pytest fixture named <cite>testbed</cite> which stores all the required attributes.I have used the generic <a class="reference external" href="https://spark.apache.org/docs/2.3.0/api/python/_modules/pyspark/sql/readwriter.html#DataFrameReader.load">read</a> and <a class="reference external" href="https://spark.apache.org/docs/latest/api/python/_modules/pyspark/sql/readwriter.html#DataFrameWriter.save">write</a> module of spark for these mocks to work.</p>
+<p>Now for Transform method we need two dataframes as input/
+It has an utility method <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_testbed" title="tests.conftest.SparkETLTests.setup_testbed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_testbed()</span></code></a> that reads the <cite>Testbed</cite> configurations to create these dataframes as well as the expected dataframe to compare.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
     <span class="k">def</span> <span class="nf">setup_testbed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates the Dataframes and tables from the test files as mapped in tests/testbed.json, \</span>
@@ -550,7 +591,7 @@ under the hood we will also leverage few features (i.e. mock) form <a class="ref
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;No test data to cook&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Let’s now have a look into our testing code for the Transform method.</p>
+<p>The actual code needs to be written to evaluate the behaviour of our transform method.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_pipeline_transform</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test pipeline.transform method using small chunks of input data and expected output data\</span>
 <span class="sd">    to make sure the function is behaving as expected.</span>
@@ -568,8 +609,7 @@ under the hood we will also leverage few features (i.e. mock) form <a class="ref
     <span class="n">testbed</span><span class="o">.</span><span class="n">comapare_dataframes</span><span class="p">(</span><span class="n">df1</span><span class="o">=</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">df2</span><span class="o">=</span><span class="n">expected_data</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>As you can see we have made available the a pytest fixture named <cite>testbed</cite>. This object stores the DataFrames and configs for testing in it’s member variables.
-We are passing the DataFrames created out of the test files and matching the output DataFrame using another helper function <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.comapare_dataframes" title="tests.conftest.SparkETLTests.comapare_dataframes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.comapare_dataframes()</span></code></a></p>
+<p>For DataFrame comparision we have another helper function <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.comapare_dataframes" title="tests.conftest.SparkETLTests.comapare_dataframes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.comapare_dataframes()</span></code></a></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">comapare_dataframes</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">df1</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">df2</span><span class="p">:</span> <span class="n">DataFrame</span><span class="p">,</span> <span class="n">excluded_keys</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -597,46 +637,6 @@ We are passing the DataFrames created out of the test files and matching the out
         <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
 </div>
-<p>Since the I/O operations are already been separated out we can introspect their calling behaviour using mocks.
-These mocks are setup in <a class="reference internal" href="tests.html#tests.conftest.SparkETLTests.setup_mocks" title="tests.conftest.SparkETLTests.setup_mocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tests.conftest.SparkETLTests.setup_mocks()</span></code></a></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="k">def</span> <span class="nf">setup_mocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Mocking spark and dataframes to introspect the calling behaviour for unittesting</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">mock_read</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameReader</span><span class="p">)</span>
-        <span class="n">mock_write</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">DataFrameWriter</span><span class="p">)</span>
-        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">)</span><span class="o">.</span><span class="n">read</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_read</span><span class="p">)</span>
-        <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mock_df</span><span class="p">)</span><span class="o">.</span><span class="n">write</span> <span class="o">=</span> <span class="n">PropertyMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="n">mock_write</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>And the code is tested using below block</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-<span class="k">def</span> <span class="nf">test_pipeline_extract</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Test pipeline.extract method using the mocked spark session and introspect the calling pattern\</span>
-<span class="sd">    to make sure spark methods were called with intended arguments</span>
-<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># calling the extract method with mocked spark and test config</span>
-    <span class="n">pipeline</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">spark</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-    <span class="c1"># introspecting the spark method call</span>
-    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="o">.</span><span class="n">page_views</span><span class="p">)</span>
-    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
-    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_spark</span><span class="o">.</span><span class="n">reset_mock</span><span class="p">()</span>
-
-
-<span class="k">def</span> <span class="nf">test_pipeline_load</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Test pipeline.load method using the mocked spark session and introspect the calling pattern\</span>
-<span class="sd">    to make sure spark methods were called with intended arguments</span>
-<span class="sd">    .. seealso:: :class:`SparkETLTests`</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># calling the extract method with mocked spark and test config</span>
-    <span class="n">pipeline</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">df</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">testbed</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
-    <span class="c1"># introspecting the spark method call</span>
-    <span class="n">testbed</span><span class="o">.</span><span class="n">mock_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>I have used the generic <a class="reference external" href="https://spark.apache.org/docs/2.3.0/api/python/_modules/pyspark/sql/readwriter.html#DataFrameReader.load">read</a> and <a class="reference external" href="https://spark.apache.org/docs/latest/api/python/_modules/pyspark/sql/readwriter.html#DataFrameWriter.save">write</a> module of spark for these mocks to work.</p>
 <p>Now, let’s look into the integration testing, We are now able to test out pipeline by mocking the return value of the I/O operations.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">test_run_integration</span><span class="p">(</span><span class="n">testbed</span><span class="p">:</span> <span class="n">SparkETLTests</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test pipeline.run method to make sure the integration is working fine\</span>
@@ -653,10 +653,10 @@ These mocks are setup in <a class="reference internal" href="tests.html#tests.co
 </pre></div>
 </div>
 <p>The idea is to use immutable test files for performing the whole validation. Methods can be connected in terms of input and expected output, across different upstream and downstream modules.
-A proper regression can be leveraged by using this approach of immutable test data and plugged into a CICD deployment.</p>
-</div>
+A proper regression can be leveraged by using this approach of immutable test data. In this case I demonstrated a single pipeline, However we can have many pipelines inside jobs folder all connected in terms of input and expected outputs.
+Which we will now implement a CICD on this pipeline in later section.</p>
 <div class="section" id="running-the-example-locally">
-<h2>Running the example locally<a class="headerlink" href="#running-the-example-locally" title="Permalink to this headline">¶</a></h2>
+<h3>Running the example locally<a class="headerlink" href="#running-the-example-locally" title="Permalink to this headline">¶</a></h3>
 <p>We use <a class="reference external" href="https://docs.pipenv.org">pipenv</a> for managing project dependencies and Python environments (i.e. virtual environments).
 All development and production dependencies are described in the <cite>Pipfile</cite></p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">pip install pipenv</span>
@@ -668,8 +668,8 @@ All development and production dependencies are described in the <cite>Pipfile</
 </pre></div>
 </div>
 </div>
-<div class="section" id="deploying-into-production">
-<h2>Deploying into production<a class="headerlink" href="#deploying-into-production" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="building-artifact">
+<h3>Building Artifact<a class="headerlink" href="#building-artifact" title="Permalink to this headline">¶</a></h3>
 <p>The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">make clean</span>
 <span class="go">make build</span>
@@ -682,6 +682,72 @@ All development and production dependencies are described in the <cite>Pipfile</
 dependencies/job_submitter.py --job pipeline --conf-file configs/config.json
 </pre></div>
 </div>
+</div>
+</div>
+<div class="section" id="cicd">
+<h2>CICD<a class="headerlink" href="#cicd" title="Permalink to this headline">¶</a></h2>
+<p>This section is quite straightforward, We will use a docker based agent for CICD. the image will be build from the DockerFile present inside the project folder.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FROM</span> <span class="n">ubuntu</span><span class="p">:</span><span class="mf">18.04</span>
+
+<span class="n">ENV</span> <span class="n">DEBIAN_FRONTEND</span> <span class="n">noninteractive</span>
+<span class="n">ENV</span> <span class="n">LC_ALL</span> <span class="n">C</span><span class="o">.</span><span class="n">UTF</span><span class="o">-</span><span class="mi">8</span>
+<span class="n">ENV</span> <span class="n">LANG</span> <span class="n">C</span><span class="o">.</span><span class="n">UTF</span><span class="o">-</span><span class="mi">8</span>
+
+<span class="n">LABEL</span> <span class="n">maintainer</span><span class="o">=</span><span class="s2">&quot;soyel.alam@ucdconnect.ie&quot;</span>
+
+<span class="n">RUN</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">update</span> <span class="o">&amp;&amp;</span> \
+	<span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="o">-</span><span class="n">y</span> <span class="n">install</span> <span class="n">sudo</span> <span class="nb">zip</span> <span class="n">awscli</span>
+
+<span class="n">RUN</span> <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="o">-</span><span class="n">y</span> <span class="n">openjdk</span><span class="o">-</span><span class="mi">8</span><span class="o">-</span><span class="n">jdk</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">apt</span><span class="o">-</span><span class="n">get</span> <span class="n">install</span> <span class="o">-</span><span class="n">y</span> <span class="n">python3</span><span class="o">-</span><span class="n">pip</span> <span class="n">python3</span><span class="o">.</span><span class="mi">6</span>
+
+<span class="n">RUN</span> <span class="n">pip3</span> <span class="n">install</span> <span class="o">--</span><span class="n">upgrade</span> <span class="n">pip</span> <span class="o">&amp;&amp;</span> \
+    <span class="n">pip3</span> <span class="n">install</span> <span class="n">pipenv</span>
+
+<span class="n">ENV</span> <span class="n">JAVA_HOME</span>  <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">jvm</span><span class="o">/</span><span class="n">java</span><span class="o">-</span><span class="mi">8</span><span class="o">-</span><span class="n">openjdk</span><span class="o">-</span><span class="n">amd64</span>
+
+<span class="n">WORKDIR</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">app</span>
+
+<span class="n">RUN</span> <span class="n">useradd</span> <span class="n">jenkins</span> <span class="o">-</span><span class="n">d</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">app</span> <span class="o">&amp;&amp;</span> <span class="n">echo</span> <span class="s2">&quot;jenkins:jenkins&quot;</span> <span class="o">|</span> <span class="n">chpasswd</span>
+
+<span class="n">RUN</span> <span class="n">chown</span> <span class="o">-</span><span class="n">R</span> <span class="n">jenkins</span><span class="p">:</span><span class="n">jenkins</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">app</span>
+</pre></div>
+</div>
+<p>The testing step is same as simple as running <cite>pytest</cite>. Once the testing is successful we are uploading our artifact zip to S3.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="p">{</span>
+  <span class="n">agent</span> <span class="p">{</span><span class="n">dockerfile</span> <span class="p">{</span>
+  <span class="n">args</span> <span class="s2">&quot;-u jenkins&quot;</span><span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n">stages</span> <span class="p">{</span>
+    <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;prepare&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">steps</span> <span class="p">{</span>
+        <span class="n">script</span><span class="p">{</span>
+        <span class="n">echo</span> <span class="s2">&quot;pipeline template&quot;</span>
+        <span class="n">sh</span> <span class="s2">&quot;ls -lart&quot;</span>
+        <span class="n">sh</span> <span class="s2">&quot;pipenv install --dev&quot;</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">){</span>
+      <span class="n">steps</span><span class="p">{</span>
+        <span class="n">sh</span> <span class="s2">&quot;pipenv run pytest&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;prepare artifact&quot;</span><span class="p">){</span>
+      <span class="n">steps</span><span class="p">{</span>
+        <span class="n">sh</span> <span class="s2">&quot;make build&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;publish artifact&quot;</span><span class="p">){</span>
+      <span class="n">steps</span><span class="p">{</span>
+        <span class="n">sh</span> <span class="s2">&quot;aws s3 ls&quot;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>That’s all for this blog, Thank you.</p>
 </div>
 </div>
 

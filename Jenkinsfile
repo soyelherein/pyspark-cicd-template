@@ -24,7 +24,7 @@ pipeline {
     }
     stage("publish artifact"){
       steps{
-        sh "aws s3 ls"
+        sh "aws s3 cp "
       }
     }
   }
