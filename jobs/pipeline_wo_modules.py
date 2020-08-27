@@ -32,41 +32,41 @@ Final Table::
         +-----------------+---------+------------+-----------+
 """
 
-if __name__ == '__main__':
-    spark: SparkSession = SparkSession.builder.enableHiveSupport().getOrCreate()
 
-    page_views = StructType(
-        [
-            StructField('email', StringType(), True),
-            StructField('pages', StringType(), True)
-        ]
-    )
+spark: SparkSession = SparkSession.builder.enableHiveSupport().getOrCreate()
 
-    inc_df: DataFrame = spark.read.csv(path='/user/stabsumalam/pyspark-tdd-template/input/page_views',
-                                       header=True,
-                                       schema=page_views)
-    inc_df.show()
-    prev_df: DataFrame = spark.read.table(tableName='stabsumalam_db.user_pageviews')
-    prev_df.show()
-    inc_df: DataFrame = (inc_df.groupBy('email').count().
-                         select(['email',
-                                 col('count').alias('page_view'),
-                                 current_date().alias('last_active')
-                                 ])
-                         )
+page_views = StructType(
+    [
+        StructField('email', StringType(), True),
+        StructField('pages', StringType(), True)
+    ]
+)
 
-    df_transformed: DataFrame = (inc_df.join(prev_df, inc_df.email == prev_df.email, 'full').
-                                 select([coalesce(prev_df.email, inc_df.email).alias('email'),
-                                         (coalesce(prev_df.page_view, lit(0)) + coalesce(inc_df.page_view,
-                                                                                         lit(0))).alias(
-                                             'page_view'),
-                                         coalesce(prev_df.created_date, inc_df.last_active).cast('date').alias(
-                                             'created_date'),
-                                         coalesce(inc_df.last_active, prev_df.last_active).cast('date').alias(
-                                             'last_active')
-                                         ])
-                                 )
+inc_df: DataFrame = spark.read.csv(path='/user/stabsumalam/pyspark-tdd-template/input/page_views',
+                                   header=True,
+                                   schema=page_views)
+inc_df.show()
+prev_df: DataFrame = spark.read.table(tableName='stabsumalam_db.user_pageviews')
+prev_df.show()
+inc_df: DataFrame = (inc_df.groupBy('email').count().
+                     select(['email',
+                             col('count').alias('page_view'),
+                             current_date().alias('last_active')
+                             ])
+                     )
 
-    df_transformed.write.save(path='/user/stabsumalam/pyspark-tdd-template/output/user_pageviews', mode='overwrite')
+df_transformed: DataFrame = (inc_df.join(prev_df, inc_df.email == prev_df.email, 'full').
+                             select([coalesce(prev_df.email, inc_df.email).alias('email'),
+                                     (coalesce(prev_df.page_view, lit(0)) + coalesce(inc_df.page_view,
+                                                                                     lit(0))).alias(
+                                         'page_view'),
+                                     coalesce(prev_df.created_date, inc_df.last_active).cast('date').alias(
+                                         'created_date'),
+                                     coalesce(inc_df.last_active, prev_df.last_active).cast('date').alias(
+                                         'last_active')
+                                     ])
+                             )
 
-    spark.stop()
+df_transformed.write.save(path='/user/stabsumalam/pyspark-tdd-template/output/user_pageviews', mode='overwrite')
+
+spark.stop()

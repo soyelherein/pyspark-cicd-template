@@ -670,7 +670,7 @@ All development and production dependencies are described in the <cite>Pipfile</
 </div>
 <div class="section" id="building-artifact">
 <h3>Building Artifact<a class="headerlink" href="#building-artifact" title="Permalink to this headline">¶</a></h3>
-<p>The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together</p>
+<p>The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together in a packages.zip file</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">make clean</span>
 <span class="go">make build</span>
 </pre></div>
@@ -740,7 +740,7 @@ dependencies/job_submitter.py --job pipeline --conf-file configs/config.json
     <span class="p">}</span>
     <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;publish artifact&quot;</span><span class="p">){</span>
       <span class="n">steps</span><span class="p">{</span>
-        <span class="n">sh</span> <span class="s2">&quot;aws s3 ls&quot;</span>
+        <span class="n">sh</span> <span class="s2">&quot;aws s3 cp &quot;</span>
       <span class="p">}</span>
     <span class="p">}</span>
   <span class="p">}</span>

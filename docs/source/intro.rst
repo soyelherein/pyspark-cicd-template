@@ -1,37 +1,24 @@
 Introduction
 ============
-This blog discusses about developing, testing and deploying data pipelines solely on our local workstation.
-As a data engineer, on daily basis we face the challenge of not being able to test the functionality of our code.
-Unless performing sort of UAT on actual production like data in some UAT/DEV/PreProd environment.
-This project discusses on a template for data pipelines using Apache Spark and its Python(`PySpark`) APIs.
-We will mainly focus on a testing framework and CICD using a small sample of production like data stored in csv files.
-I call this approach as Testbed, which can be further leveraged to a small regression to have the overall confidence on the application before it is deployed.
+One major challenge the data engineers face while building data applications is the dependency on prod like environments.
+While dependency on actual tables and data for UAT cannot be avoided,
+the development and unit testing of pipelines in isolation helps in aspects like, identifying early bugs in code, releasing code for UAT with confidence.
+This blog discusses about a self contained template approach for building data pipelines.
+We use Apache Spark and its Python(`PySpark`) APIs.
+Pytest and Unittest to test the code using session level tables rendered from small sample of production like data.
+Followed by docker based Jenkins integration.
+# This can be further enhanced to have the regression in place, to avert undesirable consequences in the downstream for continuous deployment. 
 
-
-But, before we deep dive, We need to touch upon the modularising of our application to testable units and avoid side effects.
 This project covers the following topics:
 
-* Structuring ETL application.
-* Testbed Setup.
-* Unittesting.
-* CICD.
+* `Structuring ETL application`_.
+* Testbed_.
+* CICD_.
 
 
 Structuring ETL application
 ***************************
 
-Let's consider, we have a pipeline that consume files containing pageviews data and merge it into a final table.
-
-.. literalinclude:: ../../jobs/pipeline_wo_modules.py
-  :lines: 18-
-
-The application can be submitted on spark
-
-.. code-block::
-
-	$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
-
-Ok, you have already pointed out many flaws in this code, so let's address those. 
 We will briefly cover this part, the idea here is taken from well documented blog  by `Dr. Alex loannides <https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/>`_ .
 Our overall project structure would look like.
 
@@ -58,6 +45,20 @@ Our overall project structure would look like.
 	 |   Makefile
 	 |   Pipfile
 	 |   Pipfile.lock
+
+Let's consider, we have a poorly written pipeline that consume files containing pageviews data and merge it into a final table.
+
+.. literalinclude:: ../../jobs/pipeline_wo_modules.py
+  :lines: 18-
+
+The application can be submitted on spark
+
+.. code-block::
+
+	$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
+
+Let's structure the code in below steps. 
+
 
 Handling static configurations
 ------------------------------
@@ -105,7 +106,7 @@ Our final code looks like:
 .. literalinclude:: ../../jobs/pipeline.py
   :lines: 19-
 
-Testbed Setup
+Testbed
 *************
 Given that we have structured our ETL jobs in testable modules.
 We can now test the IO bound Extract and Load using mock.
@@ -180,7 +181,7 @@ To execute the example unit test for this project run
 Building Artifact
 ------------------
 
-The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together
+The project has a build-in Makefile utility to create zipped dependency and configs and bundle them together in a packages.zip file
 
 .. code-block:: console
 
