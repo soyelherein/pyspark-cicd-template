@@ -1,6 +1,6 @@
 ### Environment agnostic PySpark data-pipeline testing and CICD
 
-### **Motivation**
+### ****Motivation**
 
 One major challenge in data pipeline implementation is how to reliably test the pipelines. As the outcome of the code is tightly coupled with data and the environment.
 This consequently blocks the developer to follow test-driven development, Identify early bugs by writing good unit testing, and releasing the code via CICD with confidence.
@@ -175,7 +175,19 @@ It is entrusted with starting and stopping spark sessions, parsing the configura
 
 > Run — Does the integration between ETL process. It is exposed to the job submitter module. It accepts the spark session, job configurations, and a logger object to execute the pipeline.
 
-**configs** **and ddl** — We will take out the static configurations and place them in a JSON file (configs/config.json) so that it can be overwritten as per the test config. We will also take out the schema from the code in the ddl/schema.py file, this will be helpful to create the test data in the form of DataFrames and Tables using a helper method during testing.
+**configs** **and ddl** — We will take out the static configurations and place them in a JSON file (configs/config.json) so that it can be overwritten as per the test config.
+
+```json
+{
+  "page_views_path": "/user/stabsumalam/pyspark-cicd-template/input/page_views",
+  "user_pageviews_tab": "stabsumalam_db.user_pageviews",
+  "output_path" : "/user/stabsumalam/pyspark-cicd-template/output/user_pageviews"
+}
+```
+
+As explained in the job_submitter module, this config along with any dynamic parameters to the job are made available to the pipeline methods as dictionary.
+
+We will also take out the schema from the code in the ddl/schema.py file, this will be helpful to create the test data in the form of DataFrames and Tables using a helper method during testing.
 
 ```python
 def extract(spark: SparkSession, config: Dict, logger) -> Tuple[DataFrame, DataFrame]:
