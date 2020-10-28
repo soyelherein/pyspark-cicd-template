@@ -12,3 +12,6 @@ derby.log
 .env
 metastore_db/
 spark-warehouse/
+*.pyc
+.coverage
+__pycache__

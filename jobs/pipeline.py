@@ -25,12 +25,15 @@ def extract(spark: SparkSession, config: Dict, logger) -> Tuple[DataFrame, DataF
     :param config: job configuration
     :type config: Dict
     :param logger: Py4j Logger
-    :rtype logger: Py4j.Logger
+    :type logger: Py4j.Logger
     :return: Spark DataFrames.
     :rtype: DataFrame
     """
-    inc_df: DataFrame = spark.read.load(path=config['page_views'], format='csv', header=True, schema=schema.page_views)
-    prev_df: DataFrame = spark.read.table(tableName=config['user_pageviews'])
+    inc_df: DataFrame = spark.read.load(path=config['page_views_path'],
+                                        format='csv',
+                                        header=True,
+                                        schema=schema.page_views)
+    prev_df: DataFrame = spark.read.table(tableName=config['user_pageviews_tab'])
 
     return inc_df, prev_df
 
@@ -45,7 +48,7 @@ def transform(inc_df: DataFrame, prev_df: DataFrame, config: Dict, logger) -> Da
     :param config: job configuration
     :type config: Dict
     :param logger: Py4j Logger
-    :rtype logger: Py4j.Logger
+    :type logger: Py4j.Logger
     :return: Transformed DataFrame.
     :rtype: DataFrame
     """
@@ -59,14 +62,21 @@ def transform(inc_df: DataFrame, prev_df: DataFrame, config: Dict, logger) -> Da
                          )
 
     # merging the data with historical records
-    df_transformed: DataFrame = (inc_df.join(prev_df, inc_df.email == prev_df.email, 'full').
-                                 select([coalesce(prev_df.email, inc_df.email).alias('email'),
-                                         (coalesce(prev_df.page_view, lit(0)) + coalesce(inc_df.page_view,
-                                                                                         lit(0))).alias('page_view'),
-                                         coalesce(prev_df.created_date, inc_df.last_active).cast('date').alias(
-                                             'created_date'),
-                                         coalesce(inc_df.last_active, prev_df.last_active).cast('date').alias(
-                                             'last_active')
+    df_transformed: DataFrame = (inc_df.join(prev_df,
+                                             inc_df.email == prev_df.email,
+                                             'full').
+                                 select([coalesce(prev_df.email, inc_df.email).
+                                        alias('email'),
+                                         (coalesce(prev_df.page_view, lit(0))
+                                          +
+                                          coalesce(inc_df.page_view, lit(0))).
+                                        alias('page_view'),
+                                         coalesce(prev_df.created_date,
+                                                  inc_df.last_active).cast('date').
+                                        alias('created_date'),
+                                         coalesce(inc_df.last_active,
+                                                  prev_df.last_active).cast('date').
+                                        alias('last_active')
                                          ])
                                  )
 
@@ -81,7 +91,7 @@ def load(df: DataFrame, config: Dict, logger) -> bool:
     :param config: job configuration
     :type config: Dict
     :param logger: Py4j Logger
-    :rtype logger: Py4j.Logger
+    :type logger: Py4j.Logger
     :return: True
     :rtype: bool
     """
@@ -107,7 +117,10 @@ def run(spark: SparkSession, config: Dict, logger) -> bool:
 
     # execute the pipeline
     inc_data, prev_data = extract(spark=spark, config=config, logger=logger)
-    transformed_data = transform(inc_df=inc_data, prev_df=prev_data, config=config, logger=logger)
+    transformed_data = transform(inc_df=inc_data,
+                                 prev_df=prev_data,
+                                 config=config,
+                                 logger=logger)
     load(df=transformed_data, config=config, logger=logger)
 
     logger.warn('pipeline is complete')

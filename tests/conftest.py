@@ -14,17 +14,19 @@
 """
 This module setup the testing environment and make available the pytest fixtures
 """
+from ddl import schema
 from dependencies import job_submitter
 from pandas.testing import assert_frame_equal
+from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.sql.dataframe import DataFrame
 from pyspark.sql.readwriter import DataFrameReader, DataFrameWriter
 from typing import Dict, List, Union
-from ddl import schema
 from unittest.mock import MagicMock, create_autospec, PropertyMock
-import unittest
 import json
+import os
 import pytest
+import unittest
 
 __owner__ = 'soyel.alam@ucdconnect.ie'
 __docformat__ = 'Sphinhx'
@@ -34,10 +36,10 @@ class SparkETLTests(unittest.TestCase):
     """
     This class does the testing setup for the spark code.\
     Object of this class is available throughout testing session.\
-    Prepares gold standard data as mapped in the test_bed.json file\
-    Create necessary dataframes and tables, apply any schema defined in test_schema.py.\
+    Prepares gold standard data as mapped in the testbed.json file\
+    Create necessary dataframes and tables, apply any schema defined in schema.py.\
     Reads the job configuration defined config_file \
-    and append any testing specific or command line configurations if specified in the test_bed.json file.\
+    and append any testing specific or command line configurations if specified in the testbed.json file.\
     Defines mock objects to introspect the calling mechanism of a few spark libraries.\
     Defines helper function to comapare the gold standard data with processes output.
 
@@ -55,6 +57,7 @@ class SparkETLTests(unittest.TestCase):
     """
 
     def __init__(self, config_file: str = 'configs/config.json', extra_file_options: Dict = {}):
+        self.__root_dir = str(Path(__file__).parent.parent)
         self.file_options: Dict = {'format': 'csv',
                                    'sep': ',',
                                    'ignoreLeadingWhiteSpace': True,
@@ -62,10 +65,11 @@ class SparkETLTests(unittest.TestCase):
                                    'header': True,
                                    'inferSchema': True}
         self.file_options.update(extra_file_options)
-        self.config_file = config_file
+        self.config_file = os.path.join(self.__root_dir, config_file)
         self.dataframes: Dict = {}
         self.mock_df: MagicMock = create_autospec(DataFrame)
         self.mock_spark: MagicMock = create_autospec(SparkSession)
+        # .parent.parent as conftest.py is now placed 2 levels below root directory
         self.setUp()
         super().__init__()
 
@@ -86,7 +90,7 @@ class SparkETLTests(unittest.TestCase):
     def setup_testbed(self):
         """Creates the Dataframes and tables from the test files as mapped in tests/testbed.json, \
         store those in instance variable named dataframes. \
-        It also enriches the test specific job configurations as per the test_bed.json
+        It also enriches the test specific job configurations as per the testbed.json
 
         tests/test_data/page_views.csv
         email,pages
@@ -108,7 +112,7 @@ class SparkETLTests(unittest.TestCase):
         """
 
         try:
-            with open('tests/test_bed.json') as f:
+            with open(os.path.join(self.__root_dir, 'tests/testbed.json')) as f:
                 test_bed_conf: Dict = json.load(f)
                 data_dict: Dict = test_bed_conf.get('data')
                 self.logger.info('loading test data from testbed')
@@ -134,7 +138,7 @@ class SparkETLTests(unittest.TestCase):
         """
 
         try:
-            with open('tests/test_bed.json') as f:
+            with open('tests/testbed.json') as f:
                 test_bed_conf: Dict = json.load(f)
                 data_dict: Dict = test_bed_conf.get('data')
                 self.logger.info('loading test data from testbed')

@@ -6,8 +6,6 @@ pipeline {
     stage("prepare") {
       steps {
         script{
-        echo "pipeline template"
-        sh "ls -lart"
         sh "pipenv install --dev"
         }
       }

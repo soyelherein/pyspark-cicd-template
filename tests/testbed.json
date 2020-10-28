@@ -1,0 +1,19 @@
+{
+    "data": {
+        "page_views": {
+            "file": "tests/test_data/page_views.csv",
+            "schema": "page_views"
+        },
+        "soyel_db.user_pageviews": {
+            "file": "tests/test_data/user_pageviews.csv",
+            "schema": "user_pageviews"
+        },
+        "expected_output_user_pageviews": {
+            "file": "tests/test_data/expected_user_pageviews.csv",
+            "schema": "user_pageviews"
+        }
+    },
+    "config": {
+        "process_date": "2020-07-21"
+    }
+}

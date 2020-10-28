@@ -1,5 +1,5 @@
 {
-  "page_views": "/user/stabsumalam/pyspark-tdd-template/input/page_views",
-  "user_pageviews": "stabsumalam_db.user_pageviews",
-  "output_path" : "/user/stabsumalam/pyspark-tdd-template/output/user_pageviews"
+  "page_views_path": "/user/soyel/pyspark-cicd-template/input/page_views",
+  "user_pageviews_tab": "soyel_db.user_pageviews",
+  "output_path" : "/user/soyel/pyspark-cicd-template/output/user_pageviews"
 }

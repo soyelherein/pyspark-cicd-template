@@ -1,13 +1,51 @@
+Motivation
+==========
+One major challenge in data engineering is the outcome of the code is tightly coupled with data and eventually with the environment, which makes it difficult to test the code reliably.
+This consequently blocks the developer to follow test-driven development, Identify early bugs by writing good unit testing, release the code via continuous integration with confidence, and so on.
+
+Using Immutable data to verify the result of ETL functions to match the expected output data can overcome these limitation. 
+This requires a good knowledge of the application and how good is your data to match the business requirement and catch corner case scenarios.
+It also needs some setup so that developer doesn't end up spending a lot of effort in creating the local test environment instead focus on the application development.
+This blog-post focuses on this second aspect, providing reusable self-contained data pipelines with CICD.
+
 Introduction
 ============
-One major challenge the data engineers face while building data applications is the dependency on prod like environments.
-While dependency on actual tables and data for UAT cannot be avoided,
-the development and unit testing of pipelines in isolation helps in aspects like, identifying early bugs in code, releasing code for UAT with confidence.
-This blog discusses about a self contained template approach for building data pipelines.
+We use Apache Spark and its Python(`PySpark`) APIs for developing data pipelines and pytest to test it.
+The idea is to incrementally develop and test the pipeline based on locally stored data in csv files.
+Required spark environment, DataFrames and tables will be made available during testing using a conftest file based on the configuration stored in a json file named testbed.json.
+We will structure our pipeline to make use this framework, so that the heavy lifting is made readily available and developer can focus on the coding.
+
+
+1. Modularise the code in Extract, Transform and Load in such a way that Transform function is free from side effects of reading and writing to tables/files.
+IO bound Extract and Load can be tested using mocks.
+2. Take out the static configurations like file path, table name and schema. schema would be used to create fake data.
+3. Create a reusable "submitter module" to handle spark environment for the ease of testing.
+4. Create a conftest.py file with helper methods for building local tables for the testing.
+5. Write unittest to compare the output of your functions and calling methods.
+6. Add the pytest run step in docker based Jenkins CICD.
+
+
+Given that we have structured our ETL jobs in testable modules.
+We can now test the IO bound Extract and Load using mock.
+In our idempotent Transform function we will feed a small slice(maybe few hundreds would be enough to test the code) of ‘real-world’ production data, locally stored in csv. Then check it against expected results.
+We will be using `pytest <https://docs.pytest.org/en/stable/>`_ style tests for our pipeline,
+under the hood we will also leverage few features (i.e. mock) form `unittest <https://docs.python.org/3/library/unittest.html>`_
+
+All the setup and helper functions ate in :mod:`tests.conftest` so that the developer can focus on the testing and need not worry about creating dataframes/test spark session/mocks etc etc.
+Let's look into the different functionality
+
+The 1st function of it is to start a SparkSession locally for testing.
+
+This blog discusses about a self contained template approach for building and testing data pipeline codes locally and subsequently releasing in UAT/Prod via CICD.
 We use Apache Spark and its Python(`PySpark`) APIs.
 Pytest and Unittest to test the code using session level tables rendered from small sample of production like data.
-Followed by docker based Jenkins integration.
-# This can be further enhanced to have the regression in place, to avert undesirable consequences in the downstream for continuous deployment. 
+Followed by docker based Jenkins CICD.
+
+1. 
+
+..
+
+This can be further enhanced to have the regression in place, to avert undesirable consequences in the downstream for continuous deployment. 
 
 This project covers the following topics:
 
@@ -67,6 +105,8 @@ First flaw you noticed is the file paths and other static configurations are tig
 Let's decouple the static configurations in a JSON file `configs/config.json`.
 
 .. literalinclude:: ../../configs/config.json
+
+..
 
 For isolated testing we will now be able to override few of these in later section.
 
@@ -208,3 +248,13 @@ The testing step is same as simple as running `pytest`. Once the testing is succ
 .. literalinclude:: ../../Jenkinsfile
 
 That's all for this blog, Thank you.
+
+
+$SPARK_HOME/bin/spark-submit \
+--py-files dependencies/job_submitter.py,jobs/pipeline.py \
+--files configs/config.json \
+dependencies/job_submitter.py --job pipeline --conf-file configs/config.json
+
+$SPARK_HOME/bin/spark-submit \
+ - py-files dependencies/job_submitter.py, jobs/pipeline_wo_modules.py \
+dependencies/job_submitter.py - job pipeline_wo_modules

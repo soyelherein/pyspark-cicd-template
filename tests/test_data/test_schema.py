@@ -22,4 +22,3 @@ exp_user_pageviews = StructType(
     ]
 )
 
-

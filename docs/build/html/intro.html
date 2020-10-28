@@ -91,7 +91,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#modularize-the-code">Modularize the code</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#testbed-setup">Testbed Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#testbed">Testbed</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#running-the-example-locally">Running the example locally</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#building-artifact">Building Artifact</a></li>
 </ul>
@@ -169,86 +169,23 @@
             
   <div class="section" id="introduction">
 <h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
-<p>This blog discusses about developing, testing and deploying data pipelines solely on our local workstation.
-As a data engineer, on daily basis we face the challenge of not being able to test the functionality of our code.
-Unless performing sort of UAT on actual production like data in some UAT/DEV/PreProd environment.
-This project discusses on a template for data pipelines using Apache Spark and its Python(<cite>PySpark</cite>) APIs.
-We will mainly focus on a testing framework and CICD using a small sample of production like data stored in csv files.
-I call this approach as Testbed, which can be further leveraged to a small regression to have the overall confidence on the application before it is deployed.</p>
-<p>But, before we deep dive, We need to touch upon the modularising of our application to testable units and avoid side effects.
-This project covers the following topics:</p>
+<p>One major challenge the data engineers face while building data applications is the dependency on prod like environments.
+While dependency on actual tables and data for UAT cannot be avoided,
+the development and unit testing of pipelines in isolation helps in aspects like, identifying early bugs in code, releasing code for UAT with confidence.
+This blog discusses about a self contained template approach for building data pipelines.
+We use Apache Spark and its Python(<cite>PySpark</cite>) APIs.
+Pytest and Unittest to test the code using session level tables rendered from small sample of production like data.
+Followed by docker based Jenkins integration.
+# This can be further enhanced to have the regression in place, to avert undesirable consequences in the downstream for continuous deployment.</p>
+<p>This project covers the following topics:</p>
 <ul class="simple">
-<li><p>Structuring ETL application.</p></li>
-<li><p>Testbed Setup.</p></li>
-<li><p>Unittesting.</p></li>
-<li><p>CICD.</p></li>
+<li><p><a class="reference internal" href="#structuring-etl-application">Structuring ETL application</a>.</p></li>
+<li><p><a class="reference internal" href="#testbed">Testbed</a>.</p></li>
+<li><p><a class="reference internal" href="#cicd">CICD</a>.</p></li>
 </ul>
 <div class="section" id="structuring-etl-application">
 <h2>Structuring ETL application<a class="headerlink" href="#structuring-etl-application" title="Permalink to this headline">¶</a></h2>
-<p>Let’s consider, we have a pipeline that consume files containing pageviews data and merge it into a final table.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Incremental file: input/page_views</span>
-<span class="sd">        email,pages</span>
-<span class="sd">        james@example.com,home</span>
-<span class="sd">        james@example.com,about</span>
-<span class="sd">        patricia@example.com,home</span>
-<span class="sd">Final Table::</span>
-<span class="sd">        +-----------------+---------+------------+-----------+</span>
-<span class="sd">        |email            |page_view|created_date|last_active|</span>
-<span class="sd">        +-----------------+---------+------------+-----------+</span>
-<span class="sd">        |james@example.com|10       |2020-01-01  |2020-07-04 |</span>
-<span class="sd">        |mary@example.com |100      |2020-02-04  |2020-02-04 |</span>
-<span class="sd">        |john@example.com |1        |2020-03-04  |2020-06-04 |</span>
-<span class="sd">        +-----------------+---------+------------+-----------+</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">enableHiveSupport</span><span class="p">()</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
-
-    <span class="n">page_views</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">),</span>
-            <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;pages&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">)</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-
-    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span>
-                                       <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                       <span class="n">schema</span><span class="o">=</span><span class="n">page_views</span><span class="p">)</span>
-    <span class="n">inc_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
-    <span class="n">prev_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span>
-                         <span class="n">select</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
-                                 <span class="n">col</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
-                                 <span class="n">current_date</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
-                                 <span class="p">])</span>
-                         <span class="p">)</span>
-
-    <span class="n">df_transformed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span>
-                                 <span class="n">select</span><span class="p">([</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
-                                         <span class="p">(</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span>
-                                                                                         <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
-                                             <span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
-                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">created_date</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
-                                             <span class="s1">&#39;created_date&#39;</span><span class="p">),</span>
-                                         <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
-                                             <span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
-                                         <span class="p">])</span>
-                                 <span class="p">)</span>
-
-    <span class="n">df_transformed</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
-
-    <span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>The application can be submitted on spark</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
-</pre></div>
-</div>
-<p>Ok, you have already pointed out many flaws in this code, so let’s address those.
-We will briefly cover this part, the idea here is taken from well documented blog  by <a class="reference external" href="https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/">Dr. Alex loannides</a> .
+<p>We will briefly cover this part, the idea here is taken from well documented blog  by <a class="reference external" href="https://alexioannides.com/2019/07/28/best-practices-for-pyspark-etl-projects/">Dr. Alex loannides</a> .
 Our overall project structure would look like.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">root/</span>
 <span class="go"> |-- configs/</span>
@@ -273,6 +210,69 @@ Our overall project structure would look like.</p>
 <span class="go"> |   Pipfile.lock</span>
 </pre></div>
 </div>
+<p>Let’s consider, we have a poorly written pipeline that consume files containing pageviews data and merge it into a final table.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Incremental file: input/page_views</span>
+<span class="sd">        email,pages</span>
+<span class="sd">        james@example.com,home</span>
+<span class="sd">        james@example.com,about</span>
+<span class="sd">        patricia@example.com,home</span>
+<span class="sd">Final Table::</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">        |email            |page_view|created_date|last_active|</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">        |james@example.com|10       |2020-01-01  |2020-07-04 |</span>
+<span class="sd">        |mary@example.com |100      |2020-02-04  |2020-02-04 |</span>
+<span class="sd">        |john@example.com |1        |2020-03-04  |2020-06-04 |</span>
+<span class="sd">        +-----------------+---------+------------+-----------+</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="n">spark</span><span class="p">:</span> <span class="n">SparkSession</span> <span class="o">=</span> <span class="n">SparkSession</span><span class="o">.</span><span class="n">builder</span><span class="o">.</span><span class="n">enableHiveSupport</span><span class="p">()</span><span class="o">.</span><span class="n">getOrCreate</span><span class="p">()</span>
+
+<span class="n">page_views</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;pages&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">(),</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/input/page_views&#39;</span><span class="p">,</span>
+                                   <span class="n">header</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                   <span class="n">schema</span><span class="o">=</span><span class="n">page_views</span><span class="p">)</span>
+<span class="n">inc_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">prev_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">tableName</span><span class="o">=</span><span class="s1">&#39;stabsumalam_db.user_pageviews&#39;</span><span class="p">)</span>
+<span class="n">prev_df</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">inc_df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">groupBy</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">count</span><span class="p">()</span><span class="o">.</span>
+                     <span class="n">select</span><span class="p">([</span><span class="s1">&#39;email&#39;</span><span class="p">,</span>
+                             <span class="n">col</span><span class="p">(</span><span class="s1">&#39;count&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                             <span class="n">current_date</span><span class="p">()</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                             <span class="p">])</span>
+                     <span class="p">)</span>
+
+<span class="n">df_transformed</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">prev_df</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span> <span class="o">==</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="s1">&#39;full&#39;</span><span class="p">)</span><span class="o">.</span>
+                             <span class="n">select</span><span class="p">([</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">email</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">email</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
+                                     <span class="p">(</span><span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span> <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span> <span class="o">+</span> <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">page_view</span><span class="p">,</span>
+                                                                                     <span class="n">lit</span><span class="p">(</span><span class="mi">0</span><span class="p">)))</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                         <span class="s1">&#39;page_view&#39;</span><span class="p">),</span>
+                                     <span class="n">coalesce</span><span class="p">(</span><span class="n">prev_df</span><span class="o">.</span><span class="n">created_date</span><span class="p">,</span> <span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                         <span class="s1">&#39;created_date&#39;</span><span class="p">),</span>
+                                     <span class="n">coalesce</span><span class="p">(</span><span class="n">inc_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">,</span> <span class="n">prev_df</span><span class="o">.</span><span class="n">last_active</span><span class="p">)</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span>
+                                         <span class="s1">&#39;last_active&#39;</span><span class="p">)</span>
+                                     <span class="p">])</span>
+                             <span class="p">)</span>
+
+<span class="n">df_transformed</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="s1">&#39;/user/stabsumalam/pyspark-tdd-template/output/user_pageviews&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span>
+
+<span class="n">spark</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The application can be submitted on spark</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$SPARK_HOME/bin/spark-submit pipeline_wo_modules.py
+</pre></div>
+</div>
+<p>Let’s structure the code in below steps.</p>
 <div class="section" id="handling-static-configurations">
 <h3>Handling static configurations<a class="headerlink" href="#handling-static-configurations" title="Permalink to this headline">¶</a></h3>
 <p>First flaw you noticed is the file paths and other static configurations are tightly coupled with the code.
@@ -477,8 +477,8 @@ Now let’s modularise the code in such a way that Transform is free from side e
 </div>
 </div>
 </div>
-<div class="section" id="testbed-setup">
-<h2>Testbed Setup<a class="headerlink" href="#testbed-setup" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="testbed">
+<h2>Testbed<a class="headerlink" href="#testbed" title="Permalink to this headline">¶</a></h2>
 <p>Given that we have structured our ETL jobs in testable modules.
 We can now test the IO bound Extract and Load using mock.
 In our idempotent Transform function we will feed a small slice(maybe few hundreds would be enough to test the code) of ‘real-world’ production data, locally stored in csv. Then check it against expected results.
@@ -740,7 +740,7 @@ dependencies/job_submitter.py --job pipeline --conf-file configs/config.json
     <span class="p">}</span>
     <span class="n">stage</span><span class="p">(</span><span class="s2">&quot;publish artifact&quot;</span><span class="p">){</span>
       <span class="n">steps</span><span class="p">{</span>
-        <span class="n">sh</span> <span class="s2">&quot;aws s3 cp &quot;</span>
+        <span class="n">sh</span> <span class="s2">&quot;aws s3 cp packages.zip s3://some-s3-path/&quot;</span>
       <span class="p">}</span>
     <span class="p">}</span>
   <span class="p">}</span>

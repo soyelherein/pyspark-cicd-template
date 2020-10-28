@@ -1,11 +1,11 @@
 # Copyright 2020 soyel.alam@ucdconnect.ie
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #        http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,8 +27,10 @@ def create_spark_session(job_name: str):
     :return: spark and logger
     :rtype: Tuple[SparkSession,Log4j]
     """
-    spark: SparkSession = SparkSession.builder.appName(job_name).enableHiveSupport().getOrCreate()
-    spark.conf.set("spark.jars.ivy", "/tmp/.ivy")
+    spark: SparkSession = (SparkSession.builder.
+                           appName(job_name).
+                           enableHiveSupport().
+                           getOrCreate())
     app_id: str = spark.conf.get('spark.app.id')
     log4j = spark._jvm.org.apache.log4j
     message_prefix = '<' + job_name + ' ' + app_id + '>'
@@ -64,14 +66,23 @@ def parse_job_args(job_args: str) -> Dict:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Job submitter',
-                                     usage='--job job_name, --conf-file config_file_name, --job-args k1=v1 k2=v2')
-    parser.add_argument('--job', help='job name', dest='job_name', required=True)
-    parser.add_argument('--conf-file', help='Config file path', required=False)
+                                     usage='''--job job_name,
+                                     --conf-file config_file_name,
+                                     --job-args k1=v1 k2=v2''')
+
+    parser.add_argument('--job',
+                        help='job name',
+                        dest='job_name',
+                        required=True)
+    parser.add_argument('--conf-file',
+                        help='Config file path',
+                        required=False)
     parser.add_argument('--job-args',
-                        help='Additional job arguments, It would be made part of config dict',
+                        help='Dynamic job arguments',
                         required=False,
                         nargs='*')
     args = parser.parse_args()
+
     job_name = args.job_name
     spark, logger = create_spark_session(job_name)
     config_file = args.conf_file if args.conf_file else 'configs/config.json'
@@ -79,6 +90,7 @@ if __name__ == '__main__':
     if args.job_args:
         job_args = parse_job_args(args.job_args)
         config_dict.update(job_args)
+
     logger.warn(f'calling job {args.job_name}  with {config_dict}')
     job = importlib.import_module(f'jobs.{job_name}')
     job.run(spark=spark, config=config_dict, logger=logger)
